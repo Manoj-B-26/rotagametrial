@@ -140,6 +140,7 @@ class BaseGame {
   async endGame() {
     this.isActive = false;
     this.stopTimer();
+    this.cleanup();
     
     if (this.mode === 'multiplayer') {
       await this.handleMultiplayerEnd();
@@ -381,9 +382,14 @@ class BaseGame {
     }
   }
 
+  cleanup() {
+    // Override in subclass for listener/interval removal
+  }
+
   exitGame() {
     const confirmExit = confirm("Are you sure you want to quit the current game? Your progress will be lost.");
     if (confirmExit) {
+      this.cleanup();
       // Clear listeners
       if (this.multiplayerListenerRef && this.roomCode) {
         fbRtdb.ref(`rooms/${this.roomCode}`).off();
@@ -417,6 +423,8 @@ class GameManager {
   resolveGameInstance(gameId) {
     if (this.activeGame && this.activeGame.isActive) {
       this.activeGame.stopTimer();
+      this.activeGame.cleanup();
+      this.activeGame.isActive = false;
     }
 
     switch(gameId) {

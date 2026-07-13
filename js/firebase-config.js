@@ -194,6 +194,8 @@ class MockFirebaseServices {
               }
               resolve({
                 docs: docs,
+                empty: docs.length === 0,
+                size: docs.length,
                 forEach: (cb) => docs.forEach(cb)
               });
             });
@@ -210,6 +212,8 @@ class MockFirebaseServices {
               }
               callback({
                 docs: docs,
+                empty: docs.length === 0,
+                size: docs.length,
                 forEach: (cb) => docs.forEach(cb)
               });
             };
@@ -234,6 +238,16 @@ class MockFirebaseServices {
         const roomCode = parts[1]; // e.g. "rooms/CODE" -> ["rooms", "CODE"]
 
         return {
+          get: () => {
+            return new Promise((resolve) => {
+              const rooms = getRooms();
+              const room = roomCode ? rooms[roomCode] : null;
+              resolve({
+                val: () => room,
+                exists: () => !!room
+              });
+            });
+          },
           set: (data) => {
             return new Promise((resolve) => {
               const rooms = getRooms();

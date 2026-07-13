@@ -148,12 +148,17 @@ class QuizGame extends BaseGame {
     }
 
     // Wait 1.2s then load next question
-    setTimeout(() => {
-      if (this.isActive) {
-        this.currentQuestionIdx++;
-        this.showNextQuestion();
-      }
+    this.questionTimeout = setTimeout(() => {
+      this.currentQuestionIdx++;
+      this.showNextQuestion();
     }, 1200);
+  }
+
+  cleanup() {
+    if (this.questionTimeout) {
+      clearTimeout(this.questionTimeout);
+      this.questionTimeout = null;
+    }
   }
 }
 

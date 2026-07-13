@@ -107,7 +107,7 @@ class AdminManager {
           </div>
           <div class="admin-stat-card">
             <span class="admin-stat-label">Most Active Club</span>
-            <span class="admin-stat-value" style="font-size:var(--text-lg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;">${activeClub.replace("Rotaract Club of ", "")}</span>
+            <span class="admin-stat-value" style="font-size:var(--text-lg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;">${(activeClub || "None").replace("Rotaract Club of ", "")}</span>
           </div>
         </div>
 
@@ -135,7 +135,7 @@ class AdminManager {
       });
 
       // Sort alphabetically
-      this.clubs.sort((a, b) => a.name.localeCompare(b.name));
+      this.clubs.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
       container.innerHTML = `
         <div class="admin-toolbar">
@@ -274,7 +274,7 @@ class AdminManager {
         this.players.push(doc.data());
       });
 
-      this.players.sort((a, b) => a.displayName.localeCompare(b.displayName));
+      this.players.sort((a, b) => (a.displayName || "").localeCompare(b.displayName || ""));
 
       container.innerHTML = `
         <h2>Players Directory</h2>

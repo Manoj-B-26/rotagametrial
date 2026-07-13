@@ -368,8 +368,14 @@ class SudokuGame extends BaseGame {
     }
   }
 
+  cleanup() {
+    if (this.keyListener) {
+      window.removeEventListener('keydown', this.keyListener);
+      this.keyListener = null;
+    }
+  }
+
   endGame() {
-    window.removeEventListener('keydown', this.keyListener);
     super.endGame();
   }
 }

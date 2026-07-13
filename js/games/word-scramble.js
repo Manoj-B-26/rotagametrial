@@ -63,7 +63,8 @@ class WordScrambleGame extends BaseGame {
     this.nextWord();
   }
 
-  scrambleWord(word) {
+  scrambleWord(word, attempts = 0) {
+    if (word.length <= 1 || attempts > 10) return word;
     const arr = word.split('');
     // Fisher-Yates shuffle
     for (let i = arr.length - 1; i > 0; i--) {
@@ -71,8 +72,8 @@ class WordScrambleGame extends BaseGame {
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     const scrambled = arr.join('');
-    // Guarantee that it is actually scrambled
-    return scrambled === word ? this.scrambleWord(word) : scrambled;
+    // Guarantee that it is actually scrambled with a safe recursion limit
+    return scrambled === word ? this.scrambleWord(word, attempts + 1) : scrambled;
   }
 
   nextWord() {

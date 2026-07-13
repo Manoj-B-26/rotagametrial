@@ -106,7 +106,7 @@ class TicTacToeGame extends BaseGame {
     document.getElementById('ttt-status').textContent = "Bot is thinking (O)...";
     
     // AI makes a move after a delay
-    setTimeout(() => {
+    this.aiTimeout = setTimeout(() => {
       this.aiMakeMove();
     }, 600);
   }
@@ -262,10 +262,21 @@ class TicTacToeGame extends BaseGame {
     document.getElementById('ttt-status').textContent = "Game Over!";
 
     // Save score and render
-    setTimeout(async () => {
+    this.gameOverTimeout = setTimeout(async () => {
       await this.saveScore();
       this.showResultsScreen();
     }, 1500);
+  }
+
+  cleanup() {
+    if (this.aiTimeout) {
+      clearTimeout(this.aiTimeout);
+      this.aiTimeout = null;
+    }
+    if (this.gameOverTimeout) {
+      clearTimeout(this.gameOverTimeout);
+      this.gameOverTimeout = null;
+    }
   }
 }
 

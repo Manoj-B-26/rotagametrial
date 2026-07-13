@@ -243,12 +243,15 @@ class SnakeGame extends BaseGame {
     });
   }
 
-  endGame() {
+  cleanup() {
     if (this.gameInterval) {
       clearInterval(this.gameInterval);
       this.gameInterval = null;
     }
     this.removeControls();
+  }
+
+  endGame() {
     super.endGame();
   }
 }

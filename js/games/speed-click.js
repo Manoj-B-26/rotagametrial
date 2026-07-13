@@ -80,11 +80,14 @@ class SpeedClickGame extends BaseGame {
     this.spawnTarget();
   }
 
-  endGame() {
+  cleanup() {
     if (this.activeTarget) {
       this.activeTarget.remove();
       this.activeTarget = null;
     }
+  }
+
+  endGame() {
     super.endGame();
   }
 }

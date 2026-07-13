@@ -13,6 +13,7 @@ class MemoryMatchGame extends BaseGame {
     this.isBoardLocked = false;
     this.matchesFound = 0;
     this.moves = 0;
+    this.matchTimeout = null;
   }
 
   init(mode = 'solo', roomCode = null, isHost = false) {
@@ -117,14 +118,26 @@ class MemoryMatchGame extends BaseGame {
   unflipCards() {
     this.isBoardLocked = true;
 
-    setTimeout(() => {
-      this.firstCard.classList.remove('flipped');
-      this.secondCard.classList.remove('flipped');
-
-      this.firstCard = null;
-      this.secondCard = null;
-      this.isBoardLocked = false;
+    this.matchTimeout = setTimeout(() => {
+      if (this.isActive) {
+        if (this.firstCard) this.firstCard.classList.remove('flipped');
+        if (this.secondCard) this.secondCard.classList.remove('flipped');
+        this.firstCard = null;
+        this.secondCard = null;
+        this.isBoardLocked = false;
+      }
     }, 1000);
+  }
+
+  cleanup() {
+    if (this.matchTimeout) {
+      clearTimeout(this.matchTimeout);
+      this.matchTimeout = null;
+    }
+  }
+
+  endGame() {
+    super.endGame();
   }
 }
 

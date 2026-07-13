@@ -209,8 +209,8 @@ class LeaderboardManager {
         subtitle = item.clubName || "District Player";
         scoreVal = `${item.totalPoints} pts`;
       } else if (type === 'clubs') {
-        name = item.name.replace("Rotaract Club of ", "RC ");
-        subtitle = item.city;
+        name = (item.name || "Unknown").replace("Rotaract Club of ", "RC ");
+        subtitle = item.city || "Unknown City";
         scoreVal = `${item.totalPoints} pts`;
       } else {
         name = item.playerName;
