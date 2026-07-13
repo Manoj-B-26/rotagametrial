@@ -190,45 +190,51 @@ class BaseGame {
 
         const hostScore = room.result.hostScore;
         const guestScore = room.result.guestScore;
+        const myProfile = auth.userProfile;
 
         if (hostScore !== undefined && guestScore !== undefined) {
-          // Stop listener
-          if (this.multiplayerListenerRef) {
-            roomRef.off();
-            this.multiplayerListenerRef = null;
-          }
-
-          // Host calculates winner and sets status to finished
-          if (this.isHost) {
+          // 1. Host side handling
+          if (this.isHost && room.status !== 'finished') {
             let winnerId = 'draw';
             if (hostScore > guestScore) winnerId = room.hostId;
             if (guestScore > hostScore) winnerId = room.guestId;
+
+            // Turn off listener locally before writing to database to avoid loop
+            if (this.multiplayerListenerRef) {
+              roomRef.off();
+              this.multiplayerListenerRef = null;
+            }
 
             await roomRef.update({
               status: 'finished',
               'result/winnerId': winnerId
             });
+
+            document.getElementById('multiplayer-waiting-overlay')?.remove();
+
+            const pointsAwarded = winnerId === myProfile.uid ? 100 : (winnerId === 'draw' ? 25 : 10);
+            this.score = pointsAwarded;
+            await this.saveScore();
+            this.showMultiplayerResults(room, hostScore, guestScore);
+            return;
           }
 
-          // Clean up waiting spinner
-          document.getElementById('multiplayer-waiting-overlay')?.remove();
+          // 2. Guest side handling (waits for host to calculate and write the winnerId)
+          if (!this.isHost && room.result.winnerId !== undefined) {
+            // Turn off listener locally
+            if (this.multiplayerListenerRef) {
+              roomRef.off();
+              this.multiplayerListenerRef = null;
+            }
 
-          // Calculate final award points for district leaderboards
-          const myProfile = auth.userProfile;
-          const isWinner = room.result.winnerId === myProfile.uid;
-          const isDraw = room.result.winnerId === 'draw';
+            document.getElementById('multiplayer-waiting-overlay')?.remove();
 
-          // Score mapping: Win = 100, Draw = 25, Loss = 10
-          let pointsAwarded = 10;
-          if (isWinner) pointsAwarded = 100;
-          if (isDraw) pointsAwarded = 25;
-
-          // Save final leaderboard stats using the awarded points
-          this.score = pointsAwarded;
-          await this.saveScore();
-
-          // Show versus screen comparison
-          this.showMultiplayerResults(room, hostScore, guestScore);
+            const winnerId = room.result.winnerId;
+            const pointsAwarded = winnerId === myProfile.uid ? 100 : (winnerId === 'draw' ? 25 : 10);
+            this.score = pointsAwarded;
+            await this.saveScore();
+            this.showMultiplayerResults(room, hostScore, guestScore);
+          }
         }
       });
     } catch (error) {

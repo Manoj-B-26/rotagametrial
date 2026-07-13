@@ -46,14 +46,6 @@ class AuthManager {
         });
       }
 
-      // Profile View: Change Club button click
-      const changeClubBtn = document.getElementById('btn-change-club');
-      if (changeClubBtn) {
-        changeClubBtn.addEventListener('click', () => {
-          this.populateClubSelection();
-          app.navigateTo('club-select');
-        });
-      }
     });
   }
 

@@ -47,6 +47,8 @@ class MockFirebaseServices {
       localStorage.setItem('rotagame_mock_rooms', JSON.stringify({}));
     }
 
+    this.activeIntervals = {};
+
     this.setupMockAuth();
     this.setupMockFirestore();
     this.setupMockRealtimeDB();
@@ -317,13 +319,19 @@ class MockFirebaseServices {
             pollRooms();
             const interval = setInterval(pollRooms, 1000);
 
-            // Return off handle
-            return {
-              off: () => clearInterval(interval)
-            };
+            if (!this.activeIntervals[path]) {
+              this.activeIntervals[path] = [];
+            }
+            this.activeIntervals[path].push(interval);
+
+            return callback;
           },
-          off: () => {
-            // Managed inside on listener returning off()
+          off: (event, callback) => {
+            const intervals = this.activeIntervals[path];
+            if (intervals) {
+              intervals.forEach(interval => clearInterval(interval));
+              delete this.activeIntervals[path];
+            }
           }
         };
       }

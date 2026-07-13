@@ -262,9 +262,16 @@ class AppController {
   dismissToast(toast) {
     if (toast.classList.contains('removing')) return;
     toast.classList.add('removing');
-    toast.addEventListener('animationend', () => {
+
+    // Safety fallback: force clean up element if animation event lags
+    const fallbackTimer = setTimeout(() => {
       toast.remove();
-    });
+    }, 300);
+
+    toast.addEventListener('animationend', () => {
+      clearTimeout(fallbackTimer);
+      toast.remove();
+    }, { once: true });
   }
 
   // --- Confetti Animations ---

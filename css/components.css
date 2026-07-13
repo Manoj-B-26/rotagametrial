@@ -676,7 +676,7 @@
 }
 
 .toast.removing {
-  animation: slide-in-right var(--transition-base) ease reverse forwards;
+  animation: slide-out-right var(--transition-base) ease forwards;
 }
 
 /* ---------- Loading Spinner ---------- */
