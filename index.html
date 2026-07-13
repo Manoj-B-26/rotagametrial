@@ -19,21 +19,7 @@
 </head>
 <body>
 
-  <!-- Floating background particles -->
-  <div class="bg-particles" id="bg-particles">
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-  </div>
+  <!-- Background Mesh Pattern loaded via CSS variables -->
 
   <!-- Header Navigation -->
   <header class="navbar" id="navbar">
@@ -226,8 +212,11 @@
           <h2 id="game-active-title">Game Title</h2>
         </div>
         <div style="display: flex; align-items: center; gap: var(--space-6); flex: 1; justify-content: flex-end;">
-          <div class="game-timer-container" id="timer-wrapper">
-            <div class="game-timer-bar" id="game-timer-bar"></div>
+          <div style="display: flex; align-items: center; gap: var(--space-3); flex: 1;">
+            <span class="game-timer-text" id="game-timer-text">60s</span>
+            <div class="game-timer-container" id="timer-wrapper" style="flex: 1;">
+              <div class="game-timer-bar" id="game-timer-bar"></div>
+            </div>
           </div>
           <div class="game-info-badge">
             <div style="display: flex; flex-direction: column; align-items: flex-end;">

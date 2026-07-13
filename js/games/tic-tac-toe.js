@@ -17,6 +17,7 @@ class TicTacToeGame extends BaseGame {
       [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
       [0, 4, 8], [2, 4, 6]             // Diagonals
     ];
+    this.multiplayerBoardRef = null;
   }
 
   init(mode = 'solo', roomCode = null, isHost = false) {
@@ -28,8 +29,12 @@ class TicTacToeGame extends BaseGame {
     if (this.mode === 'solo') {
       this.renderDifficultySelect();
     } else {
-      // Multiplayer initialization is handled in lobby.js/gamesync.js
+      // Multiplayer: Host is X, Guest is O
+      this.playerSym = this.isHost ? 'X' : 'O';
+      this.aiSym = this.isHost ? 'O' : 'X';
       this.renderTTTGrid();
+      this.updateMultiplayerStatus();
+      this.initMultiplayerSync();
       this.start();
     }
   }
@@ -85,10 +90,101 @@ class TicTacToeGame extends BaseGame {
     });
   }
 
+  // --- MULTIPLAYER SYNC ---
+  initMultiplayerSync() {
+    if (!this.roomCode) return;
+
+    const roomRef = fbRtdb.ref(`rooms/${this.roomCode}`);
+
+    // Initialize board state in RTDB (host writes initial empty board)
+    if (this.isHost) {
+      roomRef.update({
+        'tttBoard': Array(9).fill(''),
+        'tttTurn': 'X'
+      });
+    }
+
+    // Listen for board and turn updates from RTDB
+    this.multiplayerBoardRef = roomRef.on('value', (snapshot) => {
+      const room = snapshot.val();
+      if (!room || !room.tttBoard) return;
+
+      // Update local board from RTDB
+      const remoteBoard = room.tttBoard;
+      const remoteTurn = room.tttTurn;
+
+      for (let i = 0; i < 9; i++) {
+        const remoteSym = remoteBoard[i] || null;
+        if (remoteSym && this.board[i] !== remoteSym) {
+          this.board[i] = remoteSym;
+          this.makeMove(i, remoteSym, true); // visual only
+        }
+      }
+
+      // Update turn
+      this.currentTurn = remoteTurn || 'X';
+      this.updateMultiplayerStatus();
+
+      // Check for game-ending states from opponent's move
+      if (this.checkWin(this.board, this.aiSym)) {
+        this.handleGameOver('loss');
+        return;
+      }
+      if (this.checkWin(this.board, this.playerSym)) {
+        this.handleGameOver('win');
+        return;
+      }
+      if (this.checkDraw(this.board)) {
+        this.handleGameOver('draw');
+        return;
+      }
+    });
+  }
+
+  updateMultiplayerStatus() {
+    const statusEl = document.getElementById('ttt-status');
+    if (!statusEl || this.mode !== 'multiplayer') return;
+
+    const isMyTurn = this.currentTurn === this.playerSym;
+    statusEl.textContent = isMyTurn
+      ? `Your turn (${this.playerSym})`
+      : `Opponent's turn (${this.aiSym})...`;
+  }
+
   handleCellClick(idx) {
     if (this.board[idx] !== null) return;
     if (this.currentTurn !== this.playerSym) return;
 
+    if (this.mode === 'multiplayer') {
+      // Sync move to RTDB
+      this.board[idx] = this.playerSym;
+      this.makeMove(idx, this.playerSym, true);
+
+      const nextTurn = this.playerSym === 'X' ? 'O' : 'X';
+      const boardForRTDB = this.board.map(cell => cell || '');
+
+      const roomRef = fbRtdb.ref(`rooms/${this.roomCode}`);
+      roomRef.update({
+        'tttBoard': boardForRTDB,
+        'tttTurn': nextTurn
+      });
+
+      // Check win/draw after our own move
+      if (this.checkWin(this.board, this.playerSym)) {
+        this.handleGameOver('win');
+        return;
+      }
+      if (this.checkDraw(this.board)) {
+        this.handleGameOver('draw');
+        return;
+      }
+
+      this.currentTurn = nextTurn;
+      this.updateMultiplayerStatus();
+      return;
+    }
+
+    // Solo mode: play against AI
     this.makeMove(idx, this.playerSym);
 
     if (this.checkWin(this.board, this.playerSym)) {
@@ -111,8 +207,10 @@ class TicTacToeGame extends BaseGame {
     }, 600);
   }
 
-  makeMove(idx, sym) {
-    this.board[idx] = sym;
+  makeMove(idx, sym, visualOnly = false) {
+    if (!visualOnly) {
+      this.board[idx] = sym;
+    }
     const cell = document.querySelector(`.ttt-cell[data-index="${idx}"]`);
     if (cell) {
       cell.textContent = sym;
@@ -235,13 +333,17 @@ class TicTacToeGame extends BaseGame {
     if (result === 'win') {
       titleText = "Victory! 🎉";
       points = 100;
-      if (this.difficulty === 'medium') points = 150;
-      if (this.difficulty === 'hard') points = 250;
-      desc = `You defeated the ${this.difficulty} level Bot!`;
+      if (this.mode === 'solo') {
+        if (this.difficulty === 'medium') points = 150;
+        if (this.difficulty === 'hard') points = 250;
+        desc = `You defeated the ${this.difficulty} level Bot!`;
+      } else {
+        desc = "You outplayed your opponent!";
+      }
     } else if (result === 'loss') {
       titleText = "Defeat 😔";
       points = 10; // Participation points
-      desc = "The bot outsmarted you this time!";
+      desc = this.mode === 'solo' ? "The bot outsmarted you this time!" : "Your opponent won this round!";
     }
 
     this.score = points;
@@ -276,6 +378,11 @@ class TicTacToeGame extends BaseGame {
     if (this.gameOverTimeout) {
       clearTimeout(this.gameOverTimeout);
       this.gameOverTimeout = null;
+    }
+    // Stop RTDB multiplayer listener
+    if (this.multiplayerBoardRef && this.roomCode) {
+      fbRtdb.ref(`rooms/${this.roomCode}`).off();
+      this.multiplayerBoardRef = null;
     }
   }
 }

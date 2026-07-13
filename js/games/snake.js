@@ -11,7 +11,8 @@ class SnakeGame extends BaseGame {
     this.canvas = null;
     this.ctx = null;
     this.gridSize = 20;
-    this.tileCount = 20; // 20x20 grid (400x400 canvas)
+    this.tileCount = 20; // 20x20 grid
+    this.canvasSize = 400;
     
     // Game loop
     this.gameInterval = null;
@@ -49,10 +50,28 @@ class SnakeGame extends BaseGame {
     const board = document.getElementById('game-board');
     if (!board) return;
 
+    // Calculate responsive canvas size
+    const maxWidth = Math.min(window.innerWidth - 32, 400);
+    this.canvasSize = Math.floor(maxWidth / this.tileCount) * this.tileCount;
+    this.gridSize = this.canvasSize / this.tileCount;
+
     board.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; gap: var(--space-4);">
-        <canvas class="snake-canvas" id="snake-canvas" width="400" height="400"></canvas>
-        <div style="font-size: var(--text-xs); color: var(--text-muted);">Use Arrow Keys or Swipe to Move</div>
+        <canvas class="snake-canvas" id="snake-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
+        <div class="snake-dpad" id="snake-dpad">
+          <div class="dpad-row">
+            <button class="dpad-btn" id="dpad-up" aria-label="Up">▲</button>
+          </div>
+          <div class="dpad-row">
+            <button class="dpad-btn" id="dpad-left" aria-label="Left">◀</button>
+            <button class="dpad-btn dpad-center" disabled></button>
+            <button class="dpad-btn" id="dpad-right" aria-label="Right">▶</button>
+          </div>
+          <div class="dpad-row">
+            <button class="dpad-btn" id="dpad-down" aria-label="Down">▼</button>
+          </div>
+        </div>
+        <div style="font-size: var(--text-xs); color: var(--text-muted);">Use Arrow Keys, Swipe, or the D-Pad to Move</div>
       </div>
     `;
 
@@ -117,7 +136,7 @@ class SnakeGame extends BaseGame {
     
     window.addEventListener('keydown', this.keyHandler);
 
-    // Touch Swiping Controls for mobile
+    // Touch Swiping Controls for mobile (on document body for larger touch area)
     let touchStartX = 0;
     let touchStartY = 0;
     
@@ -126,30 +145,57 @@ class SnakeGame extends BaseGame {
       touchStartY = e.touches[0].clientY;
     };
 
+    this.touchMoveHandler = (e) => {
+      // Prevent page scrolling during gameplay
+      if (this.isActive) {
+        e.preventDefault();
+      }
+    };
+
     this.touchEndHandler = (e) => {
       if (!this.isActive) return;
       
       const diffX = e.changedTouches[0].clientX - touchStartX;
       const diffY = e.changedTouches[0].clientY - touchStartY;
       
+      // Minimum swipe distance of 20px (reduced from 30)
+      const minSwipe = 20;
+
       // Check horizontal vs vertical swipe
       if (Math.abs(diffX) > Math.abs(diffY)) {
-        if (diffX > 30 && this.dx !== -1) this.pendingDirection = { dx: 1, dy: 0 }; // Swipe Right
-        if (diffX < -30 && this.dx !== 1) this.pendingDirection = { dx: -1, dy: 0 }; // Swipe Left
+        if (diffX > minSwipe && this.dx !== -1) this.pendingDirection = { dx: 1, dy: 0 }; // Swipe Right
+        if (diffX < -minSwipe && this.dx !== 1) this.pendingDirection = { dx: -1, dy: 0 }; // Swipe Left
       } else {
-        if (diffY > 30 && this.dy !== -1) this.pendingDirection = { dx: 0, dy: 1 }; // Swipe Down
-        if (diffY < -30 && this.dy !== 1) this.pendingDirection = { dx: 0, dy: -1 }; // Swipe Up
+        if (diffY > minSwipe && this.dy !== -1) this.pendingDirection = { dx: 0, dy: 1 }; // Swipe Down
+        if (diffY < -minSwipe && this.dy !== 1) this.pendingDirection = { dx: 0, dy: -1 }; // Swipe Up
       }
     };
 
     this.canvas.addEventListener('touchstart', this.touchStartHandler, { passive: true });
+    this.canvas.addEventListener('touchmove', this.touchMoveHandler, { passive: false });
     this.canvas.addEventListener('touchend', this.touchEndHandler, { passive: true });
+
+    // D-Pad button controls for mobile
+    this.bindDpad();
+  }
+
+  bindDpad() {
+    const dpadUp = document.getElementById('dpad-up');
+    const dpadDown = document.getElementById('dpad-down');
+    const dpadLeft = document.getElementById('dpad-left');
+    const dpadRight = document.getElementById('dpad-right');
+
+    if (dpadUp) dpadUp.onclick = () => { if (this.dy !== 1) this.pendingDirection = { dx: 0, dy: -1 }; };
+    if (dpadDown) dpadDown.onclick = () => { if (this.dy !== -1) this.pendingDirection = { dx: 0, dy: 1 }; };
+    if (dpadLeft) dpadLeft.onclick = () => { if (this.dx !== 1) this.pendingDirection = { dx: -1, dy: 0 }; };
+    if (dpadRight) dpadRight.onclick = () => { if (this.dx !== -1) this.pendingDirection = { dx: 1, dy: 0 }; };
   }
 
   removeControls() {
     window.removeEventListener('keydown', this.keyHandler);
     if (this.canvas) {
       this.canvas.removeEventListener('touchstart', this.touchStartHandler);
+      this.canvas.removeEventListener('touchmove', this.touchMoveHandler);
       this.canvas.removeEventListener('touchend', this.touchEndHandler);
     }
   }
@@ -228,8 +274,8 @@ class SnakeGame extends BaseGame {
       // Eye indicator for head direction
       if (idx === 0) {
         this.ctx.fillStyle = 'white';
-        const eyeSize = 3;
-        const offset = 5;
+        const eyeSize = Math.max(2, this.gridSize * 0.15);
+        const offset = this.gridSize * 0.25;
         if (this.dx !== 0) {
           // Horizontal eyes
           this.ctx.fillRect(segment.x * this.gridSize + offset, segment.y * this.gridSize + offset, eyeSize, eyeSize);

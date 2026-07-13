@@ -85,18 +85,28 @@ class BaseGame {
 
   updateTimerUI() {
     const bar = document.getElementById('game-timer-bar');
+    const timerText = document.getElementById('game-timer-text');
     if (!bar) return;
 
     const percent = (this.timeLeft / this.duration) * 100;
     bar.style.transform = `scaleX(${percent / 100})`;
+
+    // Update timer text
+    if (timerText) {
+      timerText.textContent = `${this.timeLeft}s`;
+    }
 
     // Reset warnings
     bar.className = 'game-timer-bar';
 
     if (percent <= 25) {
       bar.classList.add('critical');
+      if (timerText) timerText.classList.add('critical');
     } else if (percent <= 50) {
       bar.classList.add('warning');
+      if (timerText) timerText.classList.remove('critical');
+    } else {
+      if (timerText) timerText.classList.remove('critical');
     }
   }
 
@@ -193,12 +203,15 @@ class BaseGame {
         const guestScore = room.result.guestScore;
         const myProfile = auth.userProfile;
 
-        if (hostScore !== undefined && guestScore !== undefined) {
+        // Both scores must be actual numbers (not null/undefined)
+        if (typeof hostScore === 'number' && typeof guestScore === 'number') {
           // 1. Host side handling
           if (this.isHost && room.status !== 'finished') {
             let winnerId = 'draw';
-            if (hostScore > guestScore) winnerId = room.hostId;
-            if (guestScore > hostScore) winnerId = room.guestId;
+            if (hostScore > guestScore) winnerId = room.hostId || 'host';
+            if (guestScore > hostScore) winnerId = room.guestId || 'guest';
+
+            console.log(`[Multiplayer] Host resolving: H=${hostScore} G=${guestScore} Winner=${winnerId}`);
 
             // Turn off listener locally before writing to database to avoid loop
             if (this.multiplayerListenerRef) {
@@ -211,6 +224,10 @@ class BaseGame {
               'result/winnerId': winnerId
             });
 
+            // Set winnerId on our local room copy for showMultiplayerResults
+            if (!room.result) room.result = {};
+            room.result.winnerId = winnerId;
+
             document.getElementById('multiplayer-waiting-overlay')?.remove();
 
             const pointsAwarded = winnerId === myProfile.uid ? 100 : (winnerId === 'draw' ? 25 : 10);
@@ -221,7 +238,7 @@ class BaseGame {
           }
 
           // 2. Guest side handling (waits for host to calculate and write the winnerId)
-          if (!this.isHost && room.result.winnerId !== undefined) {
+          if (!this.isHost && room.result.winnerId !== undefined && room.result.winnerId !== null) {
             // Turn off listener locally
             if (this.multiplayerListenerRef) {
               roomRef.off();

@@ -140,7 +140,7 @@ class AppController {
       case 'dashboard':
         this.renderGamesGrid();
         if (typeof auth !== 'undefined') {
-          auth.updateUserNavbar();
+          auth.updateUserNavbar(!!auth.userProfile);
         }
         break;
       case 'leaderboard':

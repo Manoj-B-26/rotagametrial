@@ -56,6 +56,26 @@ class QuizGame extends BaseGame {
         q: "What is the primary fundraising organization of Rotary?",
         o: ["The Rotary Foundation", "Rotaract Charity Fund", "World Health Trust", "Service Fund"],
         a: 0
+      },
+      {
+        q: "What does 'RYLA' stand for in Rotary?",
+        o: ["Rotary Youth Leadership Awards", "Rotaract Youth League Association", "Rotary Young Leaders Assembly", "Regional Youth Liaison Authority"],
+        a: 0
+      },
+      {
+        q: "How many avenues of service does Rotaract focus on?",
+        o: ["5", "3", "4", "6"],
+        a: 0
+      },
+      {
+        q: "When is World Rotaract Week celebrated?",
+        o: ["March 13-19", "February 23-March 1", "January 1-7", "April 10-16"],
+        a: 0
+      },
+      {
+        q: "What is the Rotary theme for 2024-25?",
+        o: ["The Magic of Rotary", "Serve to Change Lives", "Imagine Rotary", "Create Hope in the World"],
+        a: 0
       }
     ];
     this.currentQuestionIdx = 0;
@@ -114,25 +134,29 @@ class QuizGame extends BaseGame {
     const qData = this.activeQuestions[this.currentQuestionIdx];
     document.getElementById('quiz-question-text').textContent = qData.q;
 
+    // Shuffle options so the correct answer isn't always first
+    const correctAnswer = qData.o[qData.a];
+    const shuffledOptions = this.shuffleArray([...qData.o]);
+    const correctIdx = shuffledOptions.indexOf(correctAnswer);
+
     const optionsContainer = document.getElementById('quiz-options');
     optionsContainer.innerHTML = '';
 
-    qData.o.forEach((option, idx) => {
+    shuffledOptions.forEach((option, idx) => {
       const btn = document.createElement('button');
       btn.className = 'quiz-option-btn';
       btn.textContent = option;
-      btn.onclick = () => this.handleAnswerSelection(idx, btn);
+      btn.onclick = () => this.handleAnswerSelection(idx, btn, correctIdx);
       optionsContainer.appendChild(btn);
     });
   }
 
-  handleAnswerSelection(selectedIdx, selectedBtn) {
+  handleAnswerSelection(selectedIdx, selectedBtn, correctIdx) {
     // Disable all options immediately
     const btns = document.querySelectorAll('.quiz-option-btn');
     btns.forEach(b => b.disabled = true);
 
-    const qData = this.activeQuestions[this.currentQuestionIdx];
-    const isCorrect = selectedIdx === qData.a;
+    const isCorrect = selectedIdx === correctIdx;
 
     if (isCorrect) {
       selectedBtn.classList.add('correct');
@@ -144,7 +168,7 @@ class QuizGame extends BaseGame {
       selectedBtn.classList.add('incorrect');
       this.streak = 0;
       // Highlight the correct answer
-      btns[qData.a].classList.add('correct');
+      btns[correctIdx].classList.add('correct');
     }
 
     // Wait 1.2s then load next question
