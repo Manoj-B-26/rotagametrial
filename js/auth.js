@@ -228,13 +228,45 @@ class AuthManager {
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
 
+    // The navbar itself should always be visible
+    navbar.style.display = 'flex';
+
+    const userPoints = navbar.querySelector('.user-points');
+    const userAvatar = document.getElementById('nav-user-avatar');
+    
     if (!loggedIn || !this.userProfile) {
-      navbar.style.display = 'none';
+      // Hide points and avatar if not logged in
+      if (userPoints) userPoints.style.display = 'none';
+      if (userAvatar) userAvatar.style.display = 'none';
+      
+      // Show login button in navbar if not already created
+      let signInBtn = document.getElementById('nav-signin-btn');
+      if (!signInBtn) {
+        signInBtn = document.createElement('button');
+        signInBtn.id = 'nav-signin-btn';
+        signInBtn.className = 'btn btn-primary btn-sm';
+        signInBtn.innerHTML = '<i data-lucide="log-in" style="width:12px;height:12px;"></i> Sign In';
+        signInBtn.onclick = () => app.navigateTo('login');
+        navbar.querySelector('.navbar-user').appendChild(signInBtn);
+        lucide.createIcons();
+      } else {
+        signInBtn.style.display = 'flex';
+      }
+      
+      // Hide admin link
+      const navAdmin = document.getElementById('nav-admin');
+      if (navAdmin) navAdmin.style.display = 'none';
+      
       return;
     }
 
-    navbar.style.display = 'flex';
+    // If logged in:
+    if (userPoints) userPoints.style.display = 'flex';
+    if (userAvatar) userAvatar.style.display = 'flex';
     
+    const signInBtn = document.getElementById('nav-signin-btn');
+    if (signInBtn) signInBtn.style.display = 'none';
+
     // Update Score
     const navScore = document.getElementById('nav-user-score');
     if (navScore) {
