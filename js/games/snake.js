@@ -25,8 +25,8 @@ class SnakeGame extends BaseGame {
     this.pendingDirection = { dx: 1, dy: 0 };
   }
 
-  init(mode = 'solo', roomCode = null) {
-    super.init(mode, roomCode);
+  init(mode = 'solo', roomCode = null, isHost = false) {
+    super.init(mode, roomCode, isHost);
     this.score = 0;
     this.dx = 1;
     this.dy = 0;

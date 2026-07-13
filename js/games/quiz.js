@@ -62,8 +62,8 @@ class QuizGame extends BaseGame {
     this.activeQuestions = [];
   }
 
-  init(mode = 'solo', roomCode = null) {
-    super.init(mode, roomCode);
+  init(mode = 'solo', roomCode = null, isHost = false) {
+    super.init(mode, roomCode, isHost);
     this.currentQuestionIdx = 0;
     this.activeQuestions = this.shuffleArray([...this.questionsList]).slice(0, 10);
     this.score = 0;

@@ -15,8 +15,8 @@ class MemoryMatchGame extends BaseGame {
     this.moves = 0;
   }
 
-  init(mode = 'solo', roomCode = null) {
-    super.init(mode, roomCode);
+  init(mode = 'solo', roomCode = null, isHost = false) {
+    super.init(mode, roomCode, isHost);
     this.score = 0;
     this.matchesFound = 0;
     this.moves = 0;

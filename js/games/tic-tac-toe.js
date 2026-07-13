@@ -19,8 +19,8 @@ class TicTacToeGame extends BaseGame {
     ];
   }
 
-  init(mode = 'solo', roomCode = null) {
-    super.init(mode, roomCode);
+  init(mode = 'solo', roomCode = null, isHost = false) {
+    super.init(mode, roomCode, isHost);
     this.score = 0;
     this.board = Array(9).fill(null);
     this.currentTurn = 'X';

@@ -15,8 +15,8 @@ class SudokuGame extends BaseGame {
     this.difficulty = 'easy'; // easy, medium, hard
   }
 
-  init(mode = 'solo', roomCode = null) {
-    super.init(mode, roomCode);
+  init(mode = 'solo', roomCode = null, isHost = false) {
+    super.init(mode, roomCode, isHost);
     this.score = 0;
     this.selectedCell = null;
     this.notesMode = false;

@@ -10,8 +10,8 @@ class SpeedClickGame extends BaseGame {
     this.activeTarget = null;
   }
 
-  init(mode = 'solo', roomCode = null) {
-    super.init(mode, roomCode);
+  init(mode = 'solo', roomCode = null, isHost = false) {
+    super.init(mode, roomCode, isHost);
     this.score = 0;
     this.renderSpeedBoard();
     this.start();
