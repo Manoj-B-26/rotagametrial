@@ -1,0 +1,495 @@
+/* ============================================
+   RotaGame — Game-Specific Styles
+   ============================================ */
+
+/* ---------- Game Area Shell ---------- */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: var(--container-md);
+  margin: 0 auto;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card);
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(10px);
+}
+
+.game-info-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.game-info-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.game-info-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--gold);
+}
+
+.game-timer-container {
+  flex: 1;
+  max-width: 200px;
+  background: rgba(255, 255, 255, 0.05);
+  height: 6px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.game-timer-bar {
+  height: 100%;
+  width: 100%;
+  background: var(--gradient-cranberry);
+  transform-origin: left;
+  transition: transform 1s linear;
+}
+
+.game-timer-bar.warning {
+  background: linear-gradient(135deg, var(--warning) 0%, var(--gold) 100%);
+}
+
+.game-timer-bar.critical {
+  background: linear-gradient(135deg, var(--error) 0%, #dc2626 100%);
+  animation: pulse 0.5s ease infinite;
+}
+
+/* ---------- Game Boards ---------- */
+.game-play-area {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-8);
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---------- Rota-Quiz ---------- */
+.quiz-question-container {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.quiz-question-text {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.quiz-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.quiz-option-btn {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: left;
+}
+
+.quiz-option-btn:hover:not(:disabled) {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+}
+
+.quiz-option-btn.correct {
+  background: var(--success-bg) !important;
+  border-color: var(--success) !important;
+  color: white !important;
+  box-shadow: var(--shadow-glow-success);
+}
+
+.quiz-option-btn.incorrect {
+  background: var(--error-bg) !important;
+  border-color: var(--error) !important;
+  color: white !important;
+}
+
+/* ---------- Word Scramble ---------- */
+.scramble-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.scrambled-word {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(247, 168, 27, 0.2);
+  text-transform: uppercase;
+}
+
+.scramble-hint {
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.scramble-input-group {
+  width: 100%;
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---------- Memory Match ---------- */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  grid-template-rows: repeat(4, 80px);
+  gap: var(--space-4);
+  justify-content: center;
+  perspective: 1000px;
+}
+
+.memory-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--transition-slow) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.memory-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.memory-card-front,
+.memory-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  user-select: none;
+}
+
+.memory-card-back {
+  background: var(--gradient-cranberry);
+  box-shadow: var(--shadow-sm);
+}
+
+.memory-card-front {
+  background: var(--bg-tertiary);
+  transform: rotateY(180deg);
+  border-color: var(--border-gold);
+}
+
+/* ---------- Speed Click ---------- */
+.speed-click-board {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  cursor: crosshair;
+}
+
+.speed-target {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  background: var(--gradient-cranberry);
+  border-radius: var(--radius-full);
+  border: 2px solid white;
+  box-shadow: var(--shadow-glow-cranberry);
+  cursor: pointer;
+  transform: scale(0);
+  animation: bounce-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speed-target::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-full);
+}
+
+/* ---------- Rota-Snake ---------- */
+.snake-canvas {
+  background: #020208;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  display: block;
+  box-shadow: var(--shadow-md);
+  max-width: 100%;
+}
+
+/* ---------- Math Blitz ---------- */
+.math-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.math-problem {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Sudoku ---------- */
+.sudoku-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+.sudoku-board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  border: 3px solid var(--text-primary);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.sudoku-cell {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+/* Sub-grid thick borders */
+.sudoku-cell:nth-child(3n) { border-right: 2px solid var(--text-primary); }
+.sudoku-cell:nth-child(9n) { border-right: none; }
+.sudoku-row-divider {
+  grid-column: span 9;
+  height: 2px;
+  background: var(--text-primary);
+}
+
+.sudoku-cell.given {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sudoku-cell.selected {
+  background: rgba(195, 20, 91, 0.2) !important;
+}
+
+.sudoku-cell.highlighted {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sudoku-cell.conflict {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.sudoku-cell-notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  position: absolute;
+  inset: 0;
+}
+
+.sudoku-note {
+  font-size: 8px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sudoku-keypad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 412px;
+}
+
+.sudoku-key {
+  padding: var(--space-3);
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+/* ---------- Tic Tac Toe ---------- */
+.ttt-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: var(--space-3);
+  width: 280px;
+  height: 280px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3);
+}
+
+.ttt-cell {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-5xl);
+  font-family: var(--font-display);
+  font-weight: 800;
+  transition: all var(--transition-fast);
+}
+
+.ttt-cell:hover:not(.taken) {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-accent);
+}
+
+.ttt-cell.x {
+  color: var(--cranberry-light);
+  text-shadow: 0 0 10px rgba(232, 54, 125, 0.2);
+}
+
+.ttt-cell.o {
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(247, 168, 27, 0.2);
+}
+
+.ttt-cell.winning-cell {
+  background: var(--success-bg) !important;
+  border-color: var(--success) !important;
+}
+
+/* ---------- Game Result Overlay ---------- */
+.result-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 26, 0.95);
+  backdrop-filter: blur(15px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-8);
+  animation: fade-in var(--transition-base) forwards;
+  z-index: 10;
+}
+
+.result-title {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 800;
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.result-stats-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: var(--space-4) var(--space-8);
+}
+
+.result-stat-label {
+  color: var(--text-muted);
+}
+
+.result-stat-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .quiz-options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-grid {
+    grid-template-columns: repeat(4, 64px);
+    grid-template-rows: repeat(4, 64px);
+    gap: var(--space-2);
+  }
+
+  .memory-card-front, .memory-card-back {
+    font-size: var(--text-xl);
+  }
+
+  .sudoku-cell {
+    width: 32px;
+    height: 32px;
+    font-size: var(--text-sm);
+  }
+
+  .sudoku-note {
+    font-size: 6px;
+  }
+}

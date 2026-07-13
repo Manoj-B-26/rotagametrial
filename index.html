@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RotaGame — Rotaract District 3191 Gaming Platform</title>
+  <meta name="description" content="Engaging online gaming and leaderboards for Rotaractors in District 3191.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/games.css">
+  <link rel="stylesheet" href="css/lobby.css">
+  <link rel="stylesheet" href="css/leaderboard.css">
+  <link rel="stylesheet" href="css/admin.css">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Floating background particles -->
+  <div class="bg-particles" id="bg-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="navbar" id="navbar" style="display: none;">
+    <div class="navbar-brand" onclick="app.navigateTo('dashboard')">
+      <div class="brand-icon">🎮</div>
+      <span class="brand-text">RotaGame</span>
+    </div>
+    
+    <button class="navbar-mobile-toggle" id="nav-toggle" aria-label="Toggle navigation">
+      <i data-lucide="menu"></i>
+    </button>
+
+    <nav class="navbar-nav" id="nav-links">
+      <button class="nav-link active" onclick="app.navigateTo('dashboard')">
+        <i data-lucide="gamepad-2"></i> Play
+      </button>
+      <button class="nav-link" onclick="app.navigateTo('leaderboard')">
+        <i data-lucide="trophy"></i> Leaderboards
+      </button>
+      <button class="nav-link" id="nav-admin" style="display: none;" onclick="app.navigateTo('admin')">
+        <i data-lucide="shield-alert"></i> Admin
+      </button>
+      <button class="nav-link" onclick="app.navigateTo('profile')">
+        <i data-lucide="user"></i> Profile
+      </button>
+    </nav>
+
+    <div class="navbar-user">
+      <div class="user-points">
+        <i data-lucide="sparkles"></i>
+        <span id="nav-user-score">0 pts</span>
+      </div>
+      <button class="avatar avatar-sm" id="nav-user-avatar" onclick="app.navigateTo('profile')">R</button>
+    </div>
+  </header>
+
+  <!-- Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Confetti Container -->
+  <div class="confetti-container" id="confetti-container"></div>
+
+  <!-- 1. LOADING SCREEN -->
+  <main class="view active" id="view-loading">
+    <div class="container loading-screen">
+      <div class="brand-icon animate-pulse" style="font-size: var(--text-6xl); margin-bottom: var(--space-4);">🎮</div>
+      <h1 class="text-gradient animate-pulse" style="font-size: var(--text-4xl); margin-bottom: var(--space-2);">RotaGame</h1>
+      <div class="spinner"></div>
+      <div class="loading-text" id="loading-status">Connecting to Rotaract servers...</div>
+    </div>
+  </main>
+
+  <!-- 2. LOGIN SCREEN -->
+  <main class="view" id="view-login">
+    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 80vh;">
+      <div class="card card-glass text-center animate-scale-in" style="max-width: 440px; width: 100%; padding: var(--space-10);">
+        <div class="brand-icon" style="font-size: var(--text-5xl); margin: 0 auto var(--space-6) auto; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: var(--gradient-cranberry); border-radius: var(--radius-2xl);">🎮</div>
+        <h1 class="text-gradient" style="font-size: var(--text-3xl); margin-bottom: var(--space-3);">Welcome to RotaGame</h1>
+        <p style="margin-bottom: var(--space-8);">The ultimate arcade & trivia hub for Rotaract District 3191. Team up, challenge others, and climb the leaderboard representing your club!</p>
+        <button class="btn btn-primary btn-lg" id="btn-login" style="width: 100%;">
+          <i data-lucide="log-in"></i> Sign In with Google
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 3. CLUB SELECT SCREEN -->
+  <main class="view" id="view-club-select">
+    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 80vh;">
+      <div class="card card-glass animate-scale-in" style="max-width: 480px; width: 100%;">
+        <h2 class="text-center" style="margin-bottom: var(--space-2);">Select Your Club</h2>
+        <p class="text-center" style="margin-bottom: var(--space-6);">Choose which Rotaract Club you are representing in the leaderboards.</p>
+        
+        <form id="form-club-select">
+          <div class="form-group">
+            <label class="form-label" for="club-selection">Rotaract Club</label>
+            <select class="form-select" id="club-selection" required>
+              <option value="" disabled selected>Select a club...</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <button type="submit" class="btn btn-gold btn-lg" style="width: 100%; margin-top: var(--space-4);">
+            <i data-lucide="check-circle-2"></i> Join District Arena
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- 4. DASHBOARD -->
+  <main class="view" id="view-dashboard">
+    <div class="container animate-fade-in-up">
+      <div style="margin-bottom: var(--space-8);">
+        <h1 class="text-gradient" style="font-size: var(--text-4xl); margin-bottom: var(--space-2);">Rotaract 3191 Games</h1>
+        <p>Challenge other clubs in multi-player matches or top the leaderboards in solo mode.</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" id="tab-dashboard-all">All Games</button>
+        <button class="tab" id="tab-dashboard-brain">Brain & Word</button>
+        <button class="tab" id="tab-dashboard-action">Arcade & Speed</button>
+      </div>
+
+      <div class="stagger-children" id="game-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-6);">
+        <!-- Games will be injected dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- 5. MULTIPLAYER LOBBY -->
+  <main class="view" id="view-lobby">
+    <div class="container lobby-container animate-fade-in-up">
+      <div class="card card-glass" id="lobby-card">
+        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+          <button class="btn btn-icon btn-secondary btn-sm" onclick="app.navigateTo('dashboard')">
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <h2 id="lobby-game-title">Game Title</h2>
+        </div>
+        <p style="margin-bottom: var(--space-6);">Choose to host a new game room or join an existing room with a room code.</p>
+
+        <div class="room-actions">
+          <div class="room-action-pane">
+            <div class="room-action-icon">🏠</div>
+            <h3>Host a Game</h3>
+            <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4);">Create a room and share the code with a friend</p>
+            <button class="btn btn-primary" id="btn-create-room">Create Room</button>
+          </div>
+
+          <div class="room-action-pane">
+            <div class="room-action-icon">🔑</div>
+            <h3>Join Game</h3>
+            <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4);">Enter room code to play with a friend</p>
+            <div class="form-group" style="width: 100%; margin-bottom: var(--space-3);">
+              <input type="text" class="form-input text-center" id="input-room-code" placeholder="ENTER CODE" maxlength="6" style="text-transform: uppercase; font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); letter-spacing: 0.1em;">
+            </div>
+            <button class="btn btn-gold" id="btn-join-room">Join Room</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WAITING ROOM (shown dynamically) -->
+      <div class="card card-glass animate-scale-in" id="waiting-room" style="display: none;">
+        <h2 class="text-center">Multiplayer Lobby</h2>
+        <div class="text-center" style="margin-top: var(--space-2); color: var(--text-muted);">
+          Share the code below with your opponent:
+        </div>
+        <div style="margin: var(--space-4) auto; max-width: 240px;">
+          <div class="room-code-display" id="display-room-code">XXXXXX</div>
+        </div>
+
+        <div class="vs-matchup-container">
+          <div class="vs-player-card">
+            <div class="avatar avatar-xl" id="lobby-p1-avatar">P1</div>
+            <div class="vs-player-name" id="lobby-p1-name">Host Name</div>
+            <div class="vs-player-club" id="lobby-p1-club">Club Name</div>
+            <div class="vs-player-ready-indicator ready" id="lobby-p1-ready">
+              <i data-lucide="check"></i> Ready
+            </div>
+          </div>
+
+          <div class="vs-divider">VS</div>
+
+          <div class="vs-player-card">
+            <div class="avatar avatar-xl" id="lobby-p2-avatar">?</div>
+            <div class="vs-player-name" id="lobby-p2-name">Waiting...</div>
+            <div class="vs-player-club" id="lobby-p2-club">District 3191</div>
+            <div class="vs-player-ready-indicator empty" id="lobby-p2-ready">
+              <i data-lucide="clock"></i> Waiting
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: var(--space-4); margin-top: var(--space-6);">
+          <button class="btn btn-secondary" id="btn-leave-lobby" style="flex: 1;">Leave Room</button>
+          <button class="btn btn-success" id="btn-ready-lobby" style="flex: 1;" disabled>Ready Up</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 6. GAME CONTAINER -->
+  <main class="view" id="view-game">
+    <div class="container game-container">
+      <div class="game-header">
+        <div style="display: flex; align-items: center; gap: var(--space-4);">
+          <button class="btn btn-icon btn-secondary btn-sm" id="btn-exit-game">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="game-active-title">Game Title</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-6); flex: 1; justify-content: flex-end;">
+          <div class="game-timer-container" id="timer-wrapper">
+            <div class="game-timer-bar" id="game-timer-bar"></div>
+          </div>
+          <div class="game-info-badge">
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+              <span class="game-info-label" id="game-metric-label">Score</span>
+              <span class="game-info-value" id="game-metric-value">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE GAME BOARD -->
+      <div class="game-play-area" id="game-board">
+        <!-- Game boards injected here dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- 7. LEADERBOARD -->
+  <main class="view" id="view-leaderboard">
+    <div class="container animate-fade-in-up">
+      <div class="leaderboard-header">
+        <div>
+          <h1 class="text-gradient" style="font-size: var(--text-4xl); margin-bottom: var(--space-2);">Hall of Fame</h1>
+          <p>Real-time standing of all players and clubs in District 3191.</p>
+        </div>
+        
+        <div class="leaderboard-filters">
+          <div class="toggle-group" id="leaderboard-type-toggle">
+            <button class="toggle-option active" data-type="players">Players</button>
+            <button class="toggle-option" data-type="clubs">Clubs</button>
+            <button class="toggle-option" data-type="games">By Game</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game-specific selector dropdown (hidden initially unless "By Game" is chosen) -->
+      <div class="form-group" id="leaderboard-game-selector-container" style="display: none; max-width: 240px; margin-bottom: var(--space-6);">
+        <label class="form-label" for="leaderboard-game-select">Select Game</label>
+        <select class="form-select" id="leaderboard-game-select">
+          <!-- Game options dynamically injected -->
+        </select>
+      </div>
+
+      <!-- PODIUM STANDINGS -->
+      <div class="podium-container" id="leaderboard-podium">
+        <!-- Podium elements injected dynamically -->
+      </div>
+
+      <!-- STANDINGS LIST -->
+      <div class="leaderboard-table-container">
+        <table class="leaderboard-table">
+          <thead>
+            <tr id="leaderboard-table-headers">
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Club</th>
+              <th>Total Points</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-list">
+            <!-- Dynamic listing -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- 8. ADMIN PANEL -->
+  <main class="view" id="view-admin">
+    <div class="container admin-layout animate-fade-in-up">
+      <aside class="admin-sidebar">
+        <button class="admin-sidebar-btn active" data-section="dashboard">
+          <i data-lucide="layout-dashboard"></i> Dashboard
+        </button>
+        <button class="admin-sidebar-btn" data-section="clubs">
+          <i data-lucide="building-2"></i> Clubs
+        </button>
+        <button class="admin-sidebar-btn" data-section="players">
+          <i data-lucide="users"></i> Players
+        </button>
+      </aside>
+
+      <section class="admin-content" id="admin-main-content">
+        <!-- Section layout populated dynamically: dashboard / clubs / players -->
+      </section>
+    </div>
+  </main>
+
+  <!-- 9. PROFILE -->
+  <main class="view" id="view-profile">
+    <div class="container animate-fade-in-up" style="max-width: var(--container-sm);">
+      <div class="card card-glass text-center" style="margin-bottom: var(--space-6); padding: var(--space-8);">
+        <div class="avatar avatar-xl" id="profile-avatar" style="margin: 0 auto var(--space-4) auto;">R</div>
+        <h2 id="profile-name">Player Name</h2>
+        <p id="profile-club" style="margin-bottom: var(--space-4);">Rotaract Club Name</p>
+        <div class="badge badge-gold" id="profile-role">District Player</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-6);">
+          <div class="card" style="padding: var(--space-4); background: rgba(255, 255, 255, 0.02);">
+            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase;">Total Points</div>
+            <div class="text-gradient" id="profile-total-points" style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 800;">0</div>
+          </div>
+          <div class="card" style="padding: var(--space-4); background: rgba(255, 255, 255, 0.02);">
+            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase;">Games Played</div>
+            <div id="profile-games-played" style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 800; color: var(--text-primary);">0</div>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--space-8); display: flex; gap: var(--space-4);">
+          <button class="btn btn-secondary" id="btn-change-club" style="flex: 1;">
+            <i data-lucide="refresh-cw"></i> Change Club
+          </button>
+          <button class="btn btn-danger" id="btn-logout" style="flex: 1;">
+            <i data-lucide="log-out"></i> Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Match History -->
+      <div class="card">
+        <h3>Match History</h3>
+        <p style="font-size: var(--text-xs); margin-bottom: var(--space-4);">Your recent games and submissions.</p>
+        
+        <div class="leaderboard-table-container">
+          <table class="leaderboard-table" style="font-size: var(--text-sm);">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Game</th>
+                <th>Mode</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody id="profile-match-history">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- CLUB SELECTION/CREATE POPUP DIALOGS -->
+  <div class="modal-overlay" id="admin-club-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="admin-club-modal-title">Add New Club</h3>
+        <button class="modal-close" onclick="admin.closeClubModal()">&times;</button>
+      </div>
+      <form id="admin-club-form">
+        <input type="hidden" id="admin-club-id">
+        <div class="form-group">
+          <label class="form-label" for="admin-club-name">Club Name</label>
+          <input type="text" class="form-input" id="admin-club-name" placeholder="e.g. Rotaract Club of Bangalore East" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-club-short">Short Name</label>
+          <input type="text" class="form-input" id="admin-club-short" placeholder="e.g. Bangalore East" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-club-city">City/Area</label>
+          <input type="text" class="form-input" id="admin-club-city" placeholder="e.g. Bangalore" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="admin.closeClubModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Club</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FIREBASE SCRIPTS (COMPAT MODULES) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/leaderboard.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/lobby.js"></script>
+  
+  <!-- Base Game & Games -->
+  <script src="js/games/game-base.js"></script>
+  <script src="js/games/quiz.js"></script>
+  <script src="js/games/word-scramble.js"></script>
+  <script src="js/games/memory-match.js"></script>
+  <script src="js/games/speed-click.js"></script>
+  <script src="js/games/snake.js"></script>
+  <script src="js/games/math-blitz.js"></script>
+  <script src="js/games/sudoku.js"></script>
+  <script src="js/games/tic-tac-toe.js"></script>
+
+  <!-- SPA Entrypoint -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>
