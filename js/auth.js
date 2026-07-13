@@ -5,6 +5,7 @@
 class AuthManager {
   constructor() {
     this.userProfile = null;
+    this.authMode = 'signin';
     this.initAuthStateListener();
     this.initEventListeners();
   }
@@ -25,7 +26,7 @@ class AuthManager {
 
   initEventListeners() {
     document.addEventListener('DOMContentLoaded', () => {
-      // Login button click
+      // Google Login button click
       const loginBtn = document.getElementById('btn-login');
       if (loginBtn) {
         loginBtn.addEventListener('click', () => this.signIn());
@@ -46,7 +47,82 @@ class AuthManager {
         });
       }
 
+      // Toggle Auth Mode (Sign In vs Sign Up)
+      const toggleBtn = document.getElementById('toggle-auth-mode');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.toggleAuthMode();
+        });
+      }
+
+      // Email/Password login form submit
+      const loginForm = document.getElementById('form-login');
+      if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.handleEmailAuth();
+        });
+      }
     });
+  }
+
+  toggleAuthMode() {
+    const isSignIn = this.authMode === 'signin';
+    this.authMode = isSignIn ? 'signup' : 'signin';
+    
+    const nameGroup = document.getElementById('login-name-group');
+    const nameInput = document.getElementById('login-name');
+    const btnText = document.getElementById('email-btn-text');
+    const toggleText = document.getElementById('toggle-auth-text');
+    const toggleMode = document.getElementById('toggle-auth-mode');
+    
+    if (this.authMode === 'signup') {
+      if (nameGroup) nameGroup.style.display = 'block';
+      if (nameInput) nameInput.required = true;
+      if (btnText) btnText.textContent = "Register & Play";
+      if (toggleText) toggleText.textContent = "Already have an account?";
+      if (toggleMode) toggleMode.textContent = "Sign In";
+    } else {
+      if (nameGroup) nameGroup.style.display = 'none';
+      if (nameInput) {
+        nameInput.required = false;
+        nameInput.value = '';
+      }
+      if (btnText) btnText.textContent = "Sign In with Email";
+      if (toggleText) toggleText.textContent = "Don't have an account?";
+      if (toggleMode) toggleMode.textContent = "Sign Up";
+    }
+  }
+
+  async handleEmailAuth() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const name = document.getElementById('login-name').value.trim();
+    
+    const submitBtn = document.getElementById('btn-email-submit');
+    if (submitBtn) submitBtn.disabled = true;
+    
+    try {
+      if (this.authMode === 'signup') {
+        const userCredential = await fbAuth.createUserWithEmailAndPassword(email, password);
+        if (name && userCredential.user) {
+          if (typeof userCredential.user.updateProfile === 'function') {
+            await userCredential.user.updateProfile({ displayName: name });
+          } else {
+            userCredential.user.displayName = name;
+          }
+        }
+        app.showToast("Account Created", "Welcome! Let's select your club.", "success");
+      } else {
+        await fbAuth.signInWithEmailAndPassword(email, password);
+        app.showToast("Signed In", "Welcome back to RotaGame!", "success");
+      }
+    } catch (error) {
+      console.error("Email auth error:", error);
+      app.showToast("Authentication Failed", error.message, "error");
+      if (submitBtn) submitBtn.disabled = false;
+    }
   }
 
   // --- Auth Actions ---

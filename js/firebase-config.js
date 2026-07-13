@@ -88,6 +88,90 @@ class MockFirebaseServices {
           resolve({ user: mockUser });
         });
       },
+      createUserWithEmailAndPassword: (email, password) => {
+        return new Promise((resolve, reject) => {
+          const accounts = JSON.parse(localStorage.getItem('rotagame_mock_email_accounts') || '{}');
+          if (accounts[email]) {
+            reject(new Error("Email already in use."));
+            return;
+          }
+          const mockUid = `mock_user_${Date.now()}`;
+          const mockUser = {
+            uid: mockUid,
+            displayName: "Rotaractor",
+            email: email,
+            photoURL: `https://api.dicebear.com/7.x/bottts/svg?seed=${mockUid}`
+          };
+          accounts[email] = {
+            uid: mockUid,
+            email: email,
+            password: password,
+            displayName: "Rotaractor",
+            photoURL: mockUser.photoURL
+          };
+          localStorage.setItem('rotagame_mock_email_accounts', JSON.stringify(accounts));
+          
+          this.currentUser = mockUser;
+          sessionStorage.setItem('rotagame_mock_session', JSON.stringify(mockUser));
+          fbAuth.currentUser = mockUser;
+
+          this.authListeners.forEach(listener => listener(mockUser));
+          
+          const credential = {
+            user: {
+              ...mockUser,
+              updateProfile: (profileData) => {
+                return new Promise((res) => {
+                  mockUser.displayName = profileData.displayName || mockUser.displayName;
+                  if (profileData.photoURL) mockUser.photoURL = profileData.photoURL;
+                  
+                  // Update mock account storage
+                  const accs = JSON.parse(localStorage.getItem('rotagame_mock_email_accounts') || '{}');
+                  if (accs[email]) {
+                    accs[email].displayName = mockUser.displayName;
+                    accs[email].photoURL = mockUser.photoURL;
+                    localStorage.setItem('rotagame_mock_email_accounts', JSON.stringify(accs));
+                  }
+                  
+                  // Update current user
+                  this.currentUser = mockUser;
+                  sessionStorage.setItem('rotagame_mock_session', JSON.stringify(mockUser));
+                  fbAuth.currentUser = mockUser;
+                  this.authListeners.forEach(listener => listener(mockUser));
+                  res();
+                });
+              }
+            }
+          };
+          resolve(credential);
+        });
+      },
+      signInWithEmailAndPassword: (email, password) => {
+        return new Promise((resolve, reject) => {
+          const accounts = JSON.parse(localStorage.getItem('rotagame_mock_email_accounts') || '{}');
+          const acc = accounts[email];
+          if (!acc) {
+            reject(new Error("No user found with this email."));
+            return;
+          }
+          if (acc.password !== password) {
+            reject(new Error("Incorrect password."));
+            return;
+          }
+          const mockUser = {
+            uid: acc.uid,
+            displayName: acc.displayName || "Rotaractor",
+            email: acc.email,
+            photoURL: acc.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${acc.uid}`
+          };
+          this.currentUser = mockUser;
+          sessionStorage.setItem('rotagame_mock_session', JSON.stringify(mockUser));
+          fbAuth.currentUser = mockUser;
+
+          this.authListeners.forEach(listener => listener(mockUser));
+          resolve({ user: mockUser });
+        });
+      },
       signOut: () => {
         return new Promise((resolve) => {
           this.currentUser = null;
