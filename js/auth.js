@@ -105,7 +105,7 @@ class AuthManager {
       const userRef = fbDb.collection('users').doc(user.uid);
       const doc = await userRef.get();
 
-      if (doc.exists()) {
+      if (doc.exists) {
         this.userProfile = doc.data();
         
         // If club is not select, prompt for club selection
@@ -206,7 +206,7 @@ class AuthManager {
       // Update club member count in background
       const clubRef = fbDb.collection('clubs').doc(clubId);
       const clubDoc = await clubRef.get();
-      if (clubDoc.exists()) {
+      if (clubDoc.exists) {
         const count = (clubDoc.data().memberCount || 0) + 1;
         await clubRef.update({ memberCount: count });
       }

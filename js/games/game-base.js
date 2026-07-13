@@ -329,7 +329,7 @@ class BaseGame {
       if (profile.club) {
         const clubRef = fbDb.collection('clubs').doc(profile.club);
         const clubDoc = await clubRef.get();
-        if (clubDoc.exists()) {
+        if (clubDoc.exists) {
           const clubPoints = (clubDoc.data().totalPoints || 0) + this.score;
           await clubRef.update({ totalPoints: clubPoints });
         }
