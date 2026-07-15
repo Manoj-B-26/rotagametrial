@@ -25,8 +25,14 @@ class PlayerManager {
       roleBadge.textContent = "District Admin 👑";
       roleBadge.className = "badge badge-cranberry";
     } else {
-      roleBadge.textContent = "District Player 🎮";
+      roleBadge.textContent = profile.role || "Club Member";
       roleBadge.className = "badge badge-gold";
+    }
+
+    // Set current role in designation select dropdown
+    const roleSelect = document.getElementById('profile-role-select');
+    if (roleSelect) {
+      roleSelect.value = profile.role || "Club Member";
     }
 
     // Load recent matches
@@ -41,14 +47,12 @@ class PlayerManager {
 
     try {
       const snapshot = await fbDb.collection('scores')
-        .get(); // Firestore compound query can require composite indexes, simple query is safer out-of-the-box
+        .where('playerId', '==', uid)
+        .get();
 
       let matches = [];
       snapshot.forEach(doc => {
-        const scoreData = doc.data();
-        if (scoreData.playerId === uid) {
-          matches.push(scoreData);
-        }
+        matches.push(doc.data());
       });
 
       // Sort by timestamp descending
@@ -97,6 +101,31 @@ class PlayerManager {
     } catch (error) {
       console.error("Load matches error:", error);
       historyBody.innerHTML = '<tr><td colspan="4" class="text-center" style="color:var(--error);">Failed to load match history.</td></tr>';
+    }
+  }
+
+  async updateUserRole() {
+    const roleSelect = document.getElementById('profile-role-select');
+    if (!roleSelect) return;
+
+    const newRole = roleSelect.value;
+    const profile = auth.userProfile;
+    if (!profile) return;
+
+    try {
+      const userRef = fbDb.collection('users').doc(profile.uid);
+      await userRef.update({
+        role: newRole
+      });
+
+      profile.role = newRole;
+      app.showToast("Role Updated", `Your role is now set to ${newRole}.`, "success");
+      
+      // Refresh user profile details
+      await this.renderProfile();
+    } catch (error) {
+      console.error("Update user role error:", error);
+      app.showToast("Update Failed", error.message, "error");
     }
   }
 }

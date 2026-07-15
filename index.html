@@ -133,7 +133,20 @@
               <!-- Populated dynamically -->
             </select>
           </div>
-          <button type="submit" class="btn btn-gold btn-lg" style="width: 100%; margin-top: var(--space-4);">
+          
+          <div class="form-group" style="margin-top: var(--space-3);">
+            <label class="form-label" for="role-selection">Club / District Designation</label>
+            <select class="form-select" id="role-selection" required>
+              <option value="" disabled selected>Select your role...</option>
+              <option value="Executive Council">Executive Council</option>
+              <option value="District Council">District Council</option>
+              <option value="President">President</option>
+              <option value="Secretary">Secretary</option>
+              <option value="Club Member">Club Member</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-gold btn-lg" style="width: 100%; margin-top: var(--space-6);">
             <i data-lucide="check-circle-2"></i> Join District Arena
           </button>
         </form>
@@ -369,7 +382,21 @@
           </div>
         </div>
 
-        <div style="margin-top: var(--space-8); display: flex; gap: var(--space-4); width: 100%;">
+        <div style="margin-top: var(--space-6); text-align: left; border-top: 1px solid var(--border-light); padding-top: var(--space-4);">
+          <label class="form-label" for="profile-role-select" style="font-size: var(--text-xs); text-transform: uppercase; color: var(--text-secondary); font-weight: 600;">Update Designation</label>
+          <div style="display: flex; gap: var(--space-2); margin-top: var(--space-2);">
+            <select class="form-select" id="profile-role-select" style="flex: 1; padding: var(--space-2); font-size: var(--text-sm);">
+              <option value="Executive Council">Executive Council</option>
+              <option value="District Council">District Council</option>
+              <option value="President">President</option>
+              <option value="Secretary">Secretary</option>
+              <option value="Club Member">Club Member</option>
+            </select>
+            <button class="btn btn-primary" id="btn-update-role" onclick="player.updateUserRole()" style="padding: 0 var(--space-4); font-size: var(--text-sm);">Save</button>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--space-6); display: flex; gap: var(--space-4); width: 100%;">
           <button class="btn btn-danger" id="btn-logout" style="width: 100%;">
             <i data-lucide="log-out"></i> Sign Out
           </button>
@@ -417,10 +444,7 @@
           <label class="form-label" for="admin-club-short">Short Name</label>
           <input type="text" class="form-input" id="admin-club-short" placeholder="e.g. Bangalore East" required>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="admin-club-city">City/Area</label>
-          <input type="text" class="form-input" id="admin-club-city" placeholder="e.g. Bangalore" required>
-        </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="admin.closeClubModal()">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Club</button>

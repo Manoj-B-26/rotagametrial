@@ -281,10 +281,14 @@ class AuthManager {
       const user = fbAuth.currentUser;
       if (!user) return;
 
+      const roleSelect = document.getElementById('role-selection');
+      const role = roleSelect ? roleSelect.value : "Club Member";
+
       const userRef = fbDb.collection('users').doc(user.uid);
       await userRef.update({
         club: clubId,
-        clubName: clubText
+        clubName: clubText,
+        role: role
       });
 
       // Update club member count in background
@@ -297,6 +301,7 @@ class AuthManager {
 
       this.userProfile.club = clubId;
       this.userProfile.clubName = clubText;
+      this.userProfile.role = role;
 
       app.showToast("Club Affiliation Set", `You are now representing ${clubText}!`, "success");
       this.updateUserNavbar(true);
