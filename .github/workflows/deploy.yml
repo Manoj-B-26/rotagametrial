@@ -38,6 +38,9 @@ jobs:
           };
           EOF
 
+      - name: Remove gitignore before deploy
+        run: rm -f .gitignore
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
