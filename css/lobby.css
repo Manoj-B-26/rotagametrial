@@ -1,0 +1,187 @@
+/* ============================================
+   RotaGame — Multiplayer Lobby Styles
+   ============================================ */
+
+.lobby-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-width: var(--container-sm);
+  margin: 0 auto;
+}
+
+.lobby-selection-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.room-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.room-action-pane {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  text-align: center;
+  transition: all var(--transition-base);
+}
+
+.room-action-pane:hover {
+  border-color: var(--border-accent);
+}
+
+.room-action-icon {
+  font-size: var(--text-4xl);
+  background: var(--gradient-card);
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-code-display {
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.room-code-display:hover {
+  background: var(--bg-glass);
+}
+
+.room-code-display::after {
+  content: 'Click to Copy';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Waiting Room / Matchmaking VS ---------- */
+.vs-matchup-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin: var(--space-8) 0;
+  position: relative;
+}
+
+.vs-player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  width: 150px;
+}
+
+.vs-player-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.vs-player-club {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.vs-divider {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 900;
+  font-style: italic;
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 1s infinite;
+}
+
+.vs-divider::before,
+.vs-divider::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 2px;
+  background: var(--border-light);
+  top: 50%;
+}
+
+.vs-divider::before { right: 80px; }
+.vs-divider::after { left: 80px; }
+
+.vs-player-ready-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  margin-top: var(--space-2);
+}
+
+.vs-player-ready-indicator.ready {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.vs-player-ready-indicator.waiting {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.vs-player-ready-indicator.empty {
+  background: var(--bg-glass);
+  color: var(--text-muted);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 576px) {
+  .room-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .vs-matchup-container {
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .vs-divider::before,
+  .vs-divider::after {
+    display: none;
+  }
+}
