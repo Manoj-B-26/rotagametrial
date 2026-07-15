@@ -1,16 +1,16 @@
-/* ============================================
-   RotaGame — Firebase Config & Initialization
-   ============================================ */
+/* ========================================================
+   District Gaming Zone — Firebase Config & Initialization
+   ======================================================== */
 
-// Replace these values with your actual Firebase project config credentials
+// Read credentials from window.firebaseConfigEnv (js/env.js) or fallback to template placeholders
 const firebaseConfig = {
-  apiKey: "AIzaSyCf-5gVPvIQEZK9k3Ge-DfRpHalrWZcUc4",
-  authDomain: "rotagame.firebaseapp.com",
-  projectId: "rotagame",
-  storageBucket: "rotagame.firebasestorage.app",
-  messagingSenderId: "782822463141",
-  appId: "1:782822463141:web:fbbb8a725c80f9ce899f4c",
-  measurementId: "G-3D351GC53Q"
+  apiKey: window.firebaseConfigEnv?.apiKey || "YOUR_API_KEY",
+  authDomain: window.firebaseConfigEnv?.authDomain || "YOUR_AUTH_DOMAIN",
+  projectId: window.firebaseConfigEnv?.projectId || "YOUR_PROJECT_ID",
+  storageBucket: window.firebaseConfigEnv?.storageBucket || "YOUR_STORAGE_BUCKET",
+  messagingSenderId: window.firebaseConfigEnv?.messagingSenderId || "YOUR_MESSAGING_SENDER_ID",
+  appId: window.firebaseConfigEnv?.appId || "YOUR_APP_ID",
+  measurementId: window.firebaseConfigEnv?.measurementId || "YOUR_MEASUREMENT_ID"
 };
 
 // Global Firebase service references
@@ -312,90 +312,148 @@ class MockFirebaseServices {
   }
 
   // --- Mock Realtime Database (for multiplayer rooms) ---
+  // --- Mock Realtime Database (generic store supporting paths like rooms, onlinePlayers, invitations) ---
   setupMockRealtimeDB() {
-    const getRooms = () => JSON.parse(localStorage.getItem('rotagame_mock_rooms')) || {};
-    const setRooms = (rooms) => localStorage.setItem('rotagame_mock_rooms', JSON.stringify(rooms));
+    if (!localStorage.getItem('rotagame_mock_rtdb')) {
+      localStorage.setItem('rotagame_mock_rtdb', JSON.stringify({
+        rooms: {},
+        onlinePlayers: {},
+        invitations: {}
+      }));
+    }
+
+    const getDb = () => JSON.parse(localStorage.getItem('rotagame_mock_rtdb')) || {};
+    const setDb = (db) => localStorage.setItem('rotagame_mock_rtdb', JSON.stringify(db));
+
+    const getValueByPath = (db, path) => {
+      const parts = path.split('/').filter(p => p);
+      let curr = db;
+      for (const part of parts) {
+        if (!curr || typeof curr !== 'object') return null;
+        curr = curr[part];
+      }
+      return curr;
+    };
+
+    const setValueByPath = (db, path, val) => {
+      const parts = path.split('/').filter(p => p);
+      let curr = db;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!curr[part] || typeof curr[part] !== 'object') {
+          curr[part] = {};
+        }
+        curr = curr[part];
+      }
+      if (parts.length > 0) {
+        curr[parts[parts.length - 1]] = val;
+      }
+    };
+
+    const removeValueByPath = (db, path) => {
+      const parts = path.split('/').filter(p => p);
+      let curr = db;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!curr[part]) return;
+        curr = curr[part];
+      }
+      if (parts.length > 0) {
+        delete curr[parts[parts.length - 1]];
+      }
+    };
 
     fbRtdb = {
       ref: (path) => {
-        const parts = path.split('/');
-        const roomCode = parts[1]; // e.g. "rooms/CODE" -> ["rooms", "CODE"]
-
         return {
           get: () => {
             return new Promise((resolve) => {
-              const rooms = getRooms();
-              const room = roomCode ? rooms[roomCode] : null;
+              const db = getDb();
+              const val = getValueByPath(db, path);
               resolve({
-                val: () => room,
-                exists: () => !!room
+                val: () => val,
+                exists: () => val !== undefined && val !== null
               });
             });
           },
           set: (data) => {
             return new Promise((resolve) => {
-              const rooms = getRooms();
-              if (roomCode) {
-                rooms[roomCode] = data;
-                setRooms(rooms);
-              }
+              const db = getDb();
+              setValueByPath(db, path, data);
+              setDb(db);
               resolve();
             });
           },
           update: (updateData) => {
             return new Promise((resolve) => {
-              const rooms = getRooms();
-              if (roomCode && rooms[roomCode]) {
-                rooms[roomCode] = { ...rooms[roomCode], ...updateData };
-                setRooms(rooms);
-              }
+              const db = getDb();
+              const val = getValueByPath(db, path) || {};
+              const merged = { ...val, ...updateData };
+              setValueByPath(db, path, merged);
+              setDb(db);
               resolve();
             });
           },
           remove: () => {
             return new Promise((resolve) => {
-              const rooms = getRooms();
-              if (roomCode) {
-                delete rooms[roomCode];
-                setRooms(rooms);
-              }
+              const db = getDb();
+              removeValueByPath(db, path);
+              setDb(db);
               resolve();
             });
           },
+          push: () => {
+            const key = `push_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            const childPath = `${path}/${key}`;
+            return {
+              key: key,
+              set: (data) => fbRtdb.ref(childPath).set(data),
+              remove: () => fbRtdb.ref(childPath).remove()
+            };
+          },
+          child: (childKey) => fbRtdb.ref(`${path}/${childKey}`),
+          onDisconnect: () => {
+            return {
+              remove: () => Promise.resolve()
+            };
+          },
           on: (event, callback) => {
-            const pollRooms = () => {
-              const rooms = getRooms();
-              if (roomCode) {
-                const room = rooms[roomCode];
-                callback({
-                  val: () => room,
-                  exists: () => !!room
-                });
+            const poll = () => {
+              const db = getDb();
+              const val = getValueByPath(db, path);
+              
+              callback({
+                val: () => val,
+                exists: () => val !== undefined && val !== null,
+                key: path.split('/').filter(p => p).pop()
+              });
 
-                // --- BOT OPPONENT LOGIC FOR MULTIPLAYER DEMO ---
-                // If user is hosting a room and waiting, spawn a mock guest opponent after 4 seconds
+              // --- BOT OPPONENT LOGIC FOR MULTIPLAYER DEMO ---
+              if (path.startsWith('rooms/')) {
+                const roomCode = path.split('/')[1];
+                const rooms = db.rooms || {};
+                const room = rooms[roomCode];
+
                 if (room && room.status === "waiting" && !room.guestId) {
                   setTimeout(() => {
-                    const currentRooms = getRooms();
-                    const activeRoom = currentRooms[roomCode];
+                    const currentDb = getDb();
+                    const activeRoom = currentDb.rooms?.[roomCode];
                     if (activeRoom && activeRoom.status === "waiting" && !activeRoom.guestId) {
                       activeRoom.guestId = "bot_player";
                       activeRoom.guestName = "Mock Rotaract Bot 🤖";
                       activeRoom.guestReady = true;
                       activeRoom.guestClubName = "JP Nagar";
                       activeRoom.guestClubId = "c1";
-                      setRooms(currentRooms);
+                      setDb(currentDb);
                     }
                   }, 4000);
                 }
 
-                // If room is playing and opponent is a bot, simulate bot finishing game after 8 seconds
                 if (room && room.status === "playing" && room.guestId === "bot_player" && !room.result) {
                   setTimeout(() => {
-                    const currentRooms = getRooms();
-                    const activeRoom = currentRooms[roomCode];
+                    const currentDb = getDb();
+                    const activeRoom = currentDb.rooms?.[roomCode];
                     if (activeRoom && activeRoom.status === "playing" && !activeRoom.result) {
-                      // Generate a random score for the bot
                       let botScore = 150;
                       if (activeRoom.game === 'quiz') botScore = 120 + Math.floor(Math.random() * 80);
                       if (activeRoom.game === 'word-scramble') botScore = 80 + Math.floor(Math.random() * 100);
@@ -403,26 +461,79 @@ class MockFirebaseServices {
 
                       activeRoom.status = "finished";
                       activeRoom.result = {
-                        winnerId: activeRoom.hostId, // Let host win for fun
+                        winnerId: activeRoom.hostId,
                         hostScore: activeRoom.gameState?.hostScore || 200,
                         guestScore: botScore
                       };
-                      setRooms(currentRooms);
+                      setDb(currentDb);
                     }
                   }, 8000);
                 }
               }
+
+              // --- ONLINE PLAYERS SIMULATION FOR DEMO ---
+              if (path === 'onlinePlayers') {
+                const onlinePlayers = db.onlinePlayers || {};
+                const botUids = ['bot_1', 'bot_2'];
+                const botNames = ['Abhishek Gowda', 'Sindhu Sharma'];
+                const botClubs = ['RV Dental College', 'KLE Law College'];
+
+                let updated = false;
+                botUids.forEach((uid, index) => {
+                  if (!onlinePlayers[uid]) {
+                    onlinePlayers[uid] = {
+                      uid: uid,
+                      name: botNames[index],
+                      clubName: botClubs[index],
+                      status: 'idle',
+                      lastActive: Date.now()
+                    };
+                    updated = true;
+                  }
+                });
+
+                if (updated) {
+                  db.onlinePlayers = onlinePlayers;
+                  setDb(db);
+                }
+              }
+
+              // --- CHALLENGE / INVITATION ACCEPT SIMULATION FOR DEMO ---
+              if (path.startsWith('invitations/')) {
+                const inviteeUid = path.split('/')[1];
+                const invites = getValueByPath(db, path);
+                if (invites && inviteeUid.startsWith('bot_')) {
+                  const inviteList = Object.values(invites);
+                  if (inviteList.length > 0) {
+                    const firstInvite = inviteList[0];
+                    setTimeout(() => {
+                      const curDb = getDb();
+                      const activeRoom = curDb.rooms?.[firstInvite.roomCode];
+                      if (activeRoom && !activeRoom.guestId) {
+                        activeRoom.guestId = inviteeUid;
+                        activeRoom.guestName = inviteeUid === 'bot_1' ? 'Abhishek Gowda' : 'Sindhu Sharma';
+                        activeRoom.guestClubName = inviteeUid === 'bot_1' ? 'RV Dental College' : 'KLE Law College';
+                        activeRoom.guestReady = true;
+                        setDb(curDb);
+                      }
+                      fbRtdb.ref(path).remove();
+                    }, 3000);
+                  }
+                }
+              }
             };
 
-            pollRooms();
-            const interval = setInterval(pollRooms, 1000);
+            poll();
+            const interval = setInterval(poll, 1000);
 
             if (!this.activeIntervals[path]) {
               this.activeIntervals[path] = [];
             }
             this.activeIntervals[path].push(interval);
 
-            return callback;
+            return {
+              off: () => clearInterval(interval)
+            };
           },
           off: (event, callback) => {
             const intervals = this.activeIntervals[path];

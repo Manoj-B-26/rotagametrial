@@ -9,3 +9,7 @@ Thumbs.db
 *.bak
 *.tmp
 *.log
+
+# Environment credentials
+/js/env.js
+.env

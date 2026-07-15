@@ -149,6 +149,13 @@ class AuthManager {
 
   async signOut() {
     try {
+      if (this.presenceRef) {
+        await this.presenceRef.remove();
+        this.presenceRef = null;
+      }
+      if (this.invitationListener && this.invitationRef) {
+        this.invitationRef.off('child_added', this.invitationListener);
+      }
       await fbAuth.signOut();
       app.showToast("Logged Out", "Goodbye!", "info");
     } catch (error) {
@@ -182,6 +189,7 @@ class AuthManager {
           app.navigateTo('club-select');
         } else {
           this.updateUserNavbar(true);
+          this.startPresenceTracking();
           app.navigateTo('dashboard');
         }
       } else {
@@ -284,6 +292,7 @@ class AuthManager {
 
       app.showToast("Club Affiliation Set", `You are now representing ${clubText}!`, "success");
       this.updateUserNavbar(true);
+      this.startPresenceTracking();
       app.navigateTo('dashboard');
     } catch (error) {
       console.error("Update club error:", error);
@@ -353,6 +362,76 @@ class AuthManager {
     if (navAdmin) {
       navAdmin.style.display = this.userProfile.isAdmin ? 'flex' : 'none';
     }
+  }
+
+  // --- Real-time Presence & Challenge Invite Tracking ---
+  startPresenceTracking() {
+    const user = fbAuth.currentUser;
+    if (!user || !this.userProfile) return;
+
+    this.presenceRef = fbRtdb.ref(`onlinePlayers/${user.uid}`);
+    
+    this.presenceRef.set({
+      uid: user.uid,
+      name: this.userProfile.displayName || user.displayName || "Rotaractor",
+      clubName: this.userProfile.clubName || "District Player",
+      photoURL: this.userProfile.photoURL || user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
+      status: "idle", // idle, lobby, playing
+      lastActive: Date.now()
+    });
+
+    this.presenceRef.onDisconnect().remove();
+
+    // Listen for invitations sent to us
+    this.invitationRef = fbRtdb.ref(`invitations/${user.uid}`);
+    // Clear any stale invitations on login
+    this.invitationRef.remove();
+
+    this.invitationListener = this.invitationRef.on('child_added', (snapshot) => {
+      const invite = snapshot.val();
+      if (!invite) return;
+
+      this.showChallengeReceived(snapshot.key, invite);
+    });
+  }
+
+  updatePresenceStatus(status) {
+    if (this.presenceRef) {
+      this.presenceRef.update({ status: status, lastActive: Date.now() });
+    }
+  }
+
+  showChallengeReceived(inviteId, invite) {
+    const overlay = document.getElementById('challenge-overlay');
+    const text = document.getElementById('challenge-text');
+    const acceptBtn = document.getElementById('btn-accept-challenge');
+    const declineBtn = document.getElementById('btn-decline-challenge');
+
+    if (!overlay || !text || !acceptBtn || !declineBtn) return;
+
+    const gameName = invite.gameId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+    text.innerHTML = `<strong>${invite.fromName}</strong> has challenged you to a match of <strong>${gameName}</strong>!`;
+    overlay.style.display = 'flex';
+
+    app.showToast("Match Challenge", `${invite.fromName} sent you a challenge!`, "info");
+
+    acceptBtn.onclick = async () => {
+      overlay.style.display = 'none';
+      
+      this.updatePresenceStatus('lobby');
+      this.invitationRef.child(inviteId).remove();
+
+      app.navigateTo('lobby', { gameId: invite.gameId });
+
+      await lobby.joinRoomDirectly(invite.roomCode);
+    };
+
+    declineBtn.onclick = () => {
+      overlay.style.display = 'none';
+      this.invitationRef.child(inviteId).remove();
+      fbRtdb.ref(`rooms/${invite.roomCode}/decline`).set(true);
+    };
   }
 }
 

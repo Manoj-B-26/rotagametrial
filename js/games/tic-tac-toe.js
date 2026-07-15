@@ -366,7 +366,7 @@ class TicTacToeGame extends BaseGame {
     // Save score and render
     this.gameOverTimeout = setTimeout(async () => {
       await this.saveScore();
-      this.showResultsScreen();
+      this.showResultsScreen(titleText, desc);
     }, 1500);
   }
 

@@ -141,6 +141,10 @@ class AppController {
         this.renderGamesGrid();
         if (typeof auth !== 'undefined') {
           auth.updateUserNavbar(!!auth.userProfile);
+          if (auth.updatePresenceStatus) auth.updatePresenceStatus('idle');
+        }
+        if (typeof lobby !== 'undefined') {
+          lobby.cleanupLobbyView();
         }
         break;
       case 'leaderboard':

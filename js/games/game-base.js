@@ -27,6 +27,10 @@ class BaseGame {
     this.roomCode = roomCode;
     this.isHost = isHost;
     this.score = 0;
+
+    if (typeof auth !== 'undefined' && auth.updatePresenceStatus) {
+      auth.updatePresenceStatus('playing');
+    }
     
     // Clear any previous multiplayer listeners
     if (this.multiplayerListenerRef) {
@@ -151,6 +155,10 @@ class BaseGame {
     this.isActive = false;
     this.stopTimer();
     this.cleanup();
+    
+    if (typeof auth !== 'undefined' && auth.updatePresenceStatus) {
+      auth.updatePresenceStatus('idle');
+    }
     
     if (this.mode === 'multiplayer') {
       await this.handleMultiplayerEnd();
@@ -368,20 +376,23 @@ class BaseGame {
     }
   }
 
-  showResultsScreen() {
+  showResultsScreen(customTitle = "Game Over!", customDesc = "") {
     const board = document.getElementById('game-board');
     if (!board) return;
 
     const overlay = document.createElement('div');
     overlay.className = 'result-overlay';
     
+    const descHtml = customDesc ? `<p style="color: var(--text-secondary); margin-top: calc(-1 * var(--space-2)); margin-bottom: var(--space-4); text-align: center;">${customDesc}</p>` : '';
+
     overlay.innerHTML = `
-      <h2 class="result-title">Game Over!</h2>
+      <h2 class="result-title">${customTitle}</h2>
+      ${descHtml}
       <div class="result-stats-grid">
         <div class="result-stat-label">Game Played</div>
         <div class="result-stat-value">${this.title}</div>
         <div class="result-stat-label">Final Score</div>
-        <div class="result-stat-value" style="font-size:var(--text-xl); color:var(--gold); font-weight:800;">${this.score} pts</div>
+        <div class="result-stat-value" style="font-size: var(--text-xl); color: var(--gold); font-weight: 800;">${this.score} pts</div>
       </div>
       <div style="display: flex; gap: var(--space-4); margin-top: var(--space-4);">
         <button class="btn btn-secondary" onclick="app.navigateTo('dashboard')">Back to Dashboard</button>
@@ -394,7 +405,11 @@ class BaseGame {
     const replayBtn = document.getElementById('btn-replay-game');
     if (replayBtn) {
       replayBtn.onclick = () => {
-        app.launchSolo(this.gameId);
+        if (this.mode === 'multiplayer') {
+          app.navigateTo('lobby', { gameId: this.gameId });
+        } else {
+          app.launchSolo(this.gameId);
+        }
       };
     }
   }
@@ -413,6 +428,11 @@ class BaseGame {
       }
       this.stopTimer();
       this.isActive = false;
+
+      if (typeof auth !== 'undefined' && auth.updatePresenceStatus) {
+        auth.updatePresenceStatus('idle');
+      }
+
       app.navigateTo('dashboard');
     }
   }

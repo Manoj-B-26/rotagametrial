@@ -13,6 +13,9 @@ class SudokuGame extends BaseGame {
     this.notesMode = false;
     this.cellNotes = {}; // key: idx, val: set of note numbers
     this.difficulty = 'easy'; // easy, medium, hard
+    this.sudokuBoardRef = null;
+    this.sudokuResultRef = null;
+    this.gameOverTimeout = null;
   }
 
   init(mode = 'solo', roomCode = null, isHost = false) {
@@ -21,8 +24,21 @@ class SudokuGame extends BaseGame {
     this.selectedCell = null;
     this.notesMode = false;
     this.cellNotes = {};
+    this.sudokuBoardRef = null;
+    this.sudokuResultRef = null;
+    this.gameOverTimeout = null;
 
-    this.renderDifficultySelect();
+    if (this.mode === 'multiplayer') {
+      if (this.isHost) {
+        this.renderDifficultySelect();
+      } else {
+        this.renderWaitingForHost();
+        this.listenForSudokuBoard();
+      }
+      this.listenForGameResult();
+    } else {
+      this.renderDifficultySelect();
+    }
   }
 
   renderDifficultySelect() {
@@ -42,9 +58,84 @@ class SudokuGame extends BaseGame {
     `;
   }
 
+  renderWaitingForHost() {
+    const board = document.getElementById('game-board');
+    if (!board) return;
+
+    board.innerHTML = `
+      <div class="card card-glass text-center animate-scale-in" style="max-width: 360px; width:100%;">
+        <div class="spinner" style="margin: 0 auto var(--space-4) auto;"></div>
+        <h3>Waiting for Host...</h3>
+        <p style="font-size: var(--text-sm); color: var(--text-muted);">The host is choosing the Sudoku board difficulty.</p>
+      </div>
+    `;
+  }
+
+  listenForSudokuBoard() {
+    if (!this.roomCode) return;
+    const roomRef = fbRtdb.ref(`rooms/${this.roomCode}/sudokuData`);
+
+    this.sudokuBoardRef = roomRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      // Clean up board listener immediately
+      roomRef.off('value', this.sudokuBoardRef);
+      this.sudokuBoardRef = null;
+
+      // Set local states to mirror host
+      this.difficulty = data.difficulty;
+      this.originalState = data.originalState;
+      this.boardState = data.boardState;
+      this.solution = data.solution;
+
+      // Start game UI
+      this.renderSudokuGrid();
+      this.start();
+    });
+  }
+
+  listenForGameResult() {
+    if (!this.roomCode) return;
+    const roomRef = fbRtdb.ref(`rooms/${this.roomCode}`);
+
+    this.sudokuResultRef = roomRef.on('value', (snapshot) => {
+      const room = snapshot.val();
+      if (!room) return;
+
+      if (room.sudokuFinished) {
+        // Clean up result listener immediately
+        roomRef.off('value', this.sudokuResultRef);
+        this.sudokuResultRef = null;
+
+        const myProfile = auth.userProfile;
+        if (room.sudokuWinnerId === 'draw') {
+          this.handleGameOver('draw');
+        } else if (myProfile && room.sudokuWinnerId === myProfile.uid) {
+          this.handleGameOver('win');
+        } else {
+          this.handleGameOver('loss', room.sudokuWinnerName || "Opponent");
+        }
+      }
+    });
+  }
+
   startGameWithDifficulty(difficulty) {
     this.difficulty = difficulty;
     this.generateBoard();
+
+    if (this.mode === 'multiplayer') {
+      // Sync board configuration to guest
+      fbRtdb.ref(`rooms/${this.roomCode}`).update({
+        sudokuData: {
+          difficulty: this.difficulty,
+          originalState: this.originalState,
+          boardState: this.boardState,
+          solution: this.solution
+        }
+      });
+    }
+
     this.renderSudokuGrid();
     this.start();
   }
@@ -363,9 +454,47 @@ class SudokuGame extends BaseGame {
       const basePoints = 200;
       
       this.score = Math.floor((basePoints + timeBonus) * diffMultiplier);
-      app.showToast("Victory!", "You solved the Sudoku grid!", "success");
-      this.endGame();
+
+      if (this.mode === 'multiplayer') {
+        const profile = auth.userProfile;
+        fbRtdb.ref(`rooms/${this.roomCode}`).update({
+          sudokuFinished: true,
+          sudokuWinnerId: profile ? profile.uid : 'guest',
+          sudokuWinnerName: profile ? profile.displayName : 'Opponent'
+        });
+      } else {
+        app.showToast("Victory!", "You solved the Sudoku grid!", "success");
+        this.handleGameOver('win');
+      }
     }
+  }
+
+  handleGameOver(result, winnerName = null) {
+    this.isActive = false;
+    this.stopTimer();
+    this.cleanup();
+
+    let titleText = "Game Over!";
+    let desc = "Time ran out.";
+
+    if (result === 'win') {
+      titleText = "Victory! 🎉";
+      desc = this.mode === 'multiplayer' ? "You solved the grid first!" : "You successfully solved the Sudoku grid!";
+    } else if (result === 'loss') {
+      titleText = "Defeat 😔";
+      desc = `${winnerName || "Opponent"} solved the grid first!`;
+      this.score = 20; // Minimal participation points
+    } else if (result === 'draw') {
+      titleText = "Time's Up!";
+      desc = "No one finished the puzzle in time.";
+      this.score = Math.floor(this.score * 0.1); // Small fraction for partially completed board
+    }
+
+    // Save score and render overlay
+    this.gameOverTimeout = setTimeout(async () => {
+      await this.saveScore();
+      this.showResultsScreen(titleText, desc);
+    }, 1000);
   }
 
   cleanup() {
@@ -373,10 +502,31 @@ class SudokuGame extends BaseGame {
       window.removeEventListener('keydown', this.keyListener);
       this.keyListener = null;
     }
+    if (this.gameOverTimeout) {
+      clearTimeout(this.gameOverTimeout);
+      this.gameOverTimeout = null;
+    }
+    // Clean up RTDB refs
+    if (this.sudokuBoardRef && this.roomCode) {
+      fbRtdb.ref(`rooms/${this.roomCode}/sudokuData`).off();
+      this.sudokuBoardRef = null;
+    }
+    if (this.sudokuResultRef && this.roomCode) {
+      fbRtdb.ref(`rooms/${this.roomCode}`).off();
+      this.sudokuResultRef = null;
+    }
   }
 
   endGame() {
-    super.endGame();
+    if (this.mode === 'multiplayer') {
+      // If timer ran out before solving
+      fbRtdb.ref(`rooms/${this.roomCode}`).update({
+        sudokuFinished: true,
+        sudokuWinnerId: 'draw'
+      });
+    } else {
+      this.handleGameOver('draw');
+    }
   }
 }
 
