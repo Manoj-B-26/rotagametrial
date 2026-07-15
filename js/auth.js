@@ -139,10 +139,18 @@ class AuthManager {
         const provider = new firebase.auth.GoogleAuthProvider();
         await fbAuth.signInWithPopup(provider);
       }
-      app.showToast("Success", "Welcome to RotaGame District 3191!", "success");
+      app.showToast("Success", "Welcome to District Gaming Zone!", "success");
     } catch (error) {
       console.error("Sign-in error:", error);
-      app.showToast("Sign-in Failed", error.message, "error");
+      if (error.code === 'auth/unauthorized-domain') {
+        app.showToast(
+          "Domain Unauthorized", 
+          `Please add '${window.location.hostname}' to your 'Authorized Domains' in the Firebase Console (Authentication -> Settings).`, 
+          "error"
+        );
+      } else {
+        app.showToast("Sign-in Failed", error.message, "error");
+      }
       if (loginBtn) loginBtn.disabled = false;
     }
   }
