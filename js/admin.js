@@ -293,9 +293,12 @@ class AdminManager {
                   <td>
                     ${p.isAdmin ? '<span class="badge badge-cranberry">Admin 👑</span>' : '<span class="badge badge-gold">Player</span>'}
                   </td>
-                  <td class="admin-table-actions">
+                  <td class="admin-table-actions" style="display: flex; gap: var(--space-2); justify-content: flex-end;">
                     <button class="btn btn-secondary btn-sm" style="font-size:11px;" onclick="admin.toggleUserAdmin('${p.uid}', ${p.isAdmin})">
                       ${p.isAdmin ? 'Revoke Admin' : 'Make Admin'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="admin.deleteUser('${p.uid}', '${p.displayName || "Rotaractor"}')" title="Delete User">
+                      <i data-lucide="trash" style="width:14px;height:14px;"></i>
                     </button>
                   </td>
                 </tr>
@@ -325,6 +328,30 @@ class AdminManager {
     } catch (error) {
       console.error("Toggle admin role error:", error);
       app.showToast("Update Error", error.message, "error");
+    }
+  }
+
+  async deleteUser(uid, displayName) {
+    const confirmDel = confirm(`Are you sure you want to permanently delete the player profile for "${displayName}"? This will clear them from all leaderboards and match entries.`);
+    if (!confirmDel) return;
+
+    try {
+      // 1. Delete user doc from Firestore
+      await fbDb.collection('users').doc(uid).delete();
+
+      // 2. Query and delete all scores for this player using a Firestore batch
+      const scoresSnapshot = await fbDb.collection('scores').where('playerId', '==', uid).get();
+      const batch = fbDb.batch();
+      scoresSnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
+      app.showToast("Player Deleted", "Player profile and high scores purged.", "info");
+      this.switchSection('players');
+    } catch (error) {
+      console.error("Delete user profile error:", error);
+      app.showToast("Delete Error", error.message, "error");
     }
   }
 }
