@@ -118,7 +118,7 @@
   --z-confetti: 600;
 
   /* Layout */
-  --nav-height: 64px;
+  --nav-height: 72px;
   --sidebar-width: 280px;
   --container-max: 1200px;
   --container-sm: 640px;
@@ -501,7 +501,7 @@ a:hover {
     --text-5xl: 2.25rem;
     --text-4xl: 1.875rem;
     --text-3xl: 1.5rem;
-    --nav-height: 56px;
+    --nav-height: 64px;
   }
 
   .container {

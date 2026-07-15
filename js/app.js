@@ -77,12 +77,16 @@ class AppController {
 
   initEventListeners() {
     document.addEventListener('DOMContentLoaded', () => {
-      // Mobile menu toggle
-      const navToggle = document.getElementById('nav-toggle');
+      // Mobile menu toggle & Profile navigation via Avatar
+      const navUserAvatar = document.getElementById('nav-user-avatar');
       const navLinks = document.getElementById('nav-links');
-      if (navToggle && navLinks) {
-        navToggle.addEventListener('click', () => {
-          navLinks.classList.toggle('open');
+      if (navUserAvatar && navLinks) {
+        navUserAvatar.addEventListener('click', () => {
+          if (window.innerWidth <= 768) {
+            navLinks.classList.toggle('open');
+          } else {
+            this.navigateTo('profile');
+          }
         });
       }
 

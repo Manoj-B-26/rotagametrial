@@ -29,11 +29,6 @@ class PlayerManager {
       roleBadge.className = "badge badge-gold";
     }
 
-    // Set current role in designation select dropdown
-    const roleSelect = document.getElementById('profile-role-select');
-    if (roleSelect) {
-      roleSelect.value = profile.role || "Club Member";
-    }
 
     // Load recent matches
     await this.loadMatchHistory(profile.uid);
@@ -101,31 +96,6 @@ class PlayerManager {
     } catch (error) {
       console.error("Load matches error:", error);
       historyBody.innerHTML = '<tr><td colspan="4" class="text-center" style="color:var(--error);">Failed to load match history.</td></tr>';
-    }
-  }
-
-  async updateUserRole() {
-    const roleSelect = document.getElementById('profile-role-select');
-    if (!roleSelect) return;
-
-    const newRole = roleSelect.value;
-    const profile = auth.userProfile;
-    if (!profile) return;
-
-    try {
-      const userRef = fbDb.collection('users').doc(profile.uid);
-      await userRef.update({
-        role: newRole
-      });
-
-      profile.role = newRole;
-      app.showToast("Role Updated", `Your role is now set to ${newRole}.`, "success");
-      
-      // Refresh user profile details
-      await this.renderProfile();
-    } catch (error) {
-      console.error("Update user role error:", error);
-      app.showToast("Update Failed", error.message, "error");
     }
   }
 }

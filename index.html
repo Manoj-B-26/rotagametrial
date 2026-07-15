@@ -28,10 +28,6 @@
       <img src="logo.png" alt="District Gaming Zone" style="height: 38px; width: auto; object-fit: contain; border-radius: var(--radius-sm);">
       <span class="brand-text" style="font-family: var(--font-display); font-weight: 800; font-size: var(--text-md); letter-spacing: 0.05em; text-transform: uppercase;">District Gaming Zone</span>
     </div>
-    
-    <button class="navbar-mobile-toggle" id="nav-toggle" aria-label="Toggle navigation">
-      <i data-lucide="menu"></i>
-    </button>
 
     <nav class="navbar-nav" id="nav-links">
       <button class="nav-link active" onclick="app.navigateTo('dashboard')">
@@ -53,7 +49,7 @@
         <i data-lucide="sparkles"></i>
         <span id="nav-user-score">0 pts</span>
       </div>
-      <button class="avatar avatar-sm" id="nav-user-avatar" onclick="app.navigateTo('profile')">R</button>
+      <button class="avatar avatar-sm" id="nav-user-avatar">R</button>
     </div>
   </header>
 
@@ -382,19 +378,7 @@
           </div>
         </div>
 
-        <div style="margin-top: var(--space-6); text-align: left; border-top: 1px solid var(--border-light); padding-top: var(--space-4);">
-          <label class="form-label" for="profile-role-select" style="font-size: var(--text-xs); text-transform: uppercase; color: var(--text-secondary); font-weight: 600;">Update Designation</label>
-          <div style="display: flex; gap: var(--space-2); margin-top: var(--space-2);">
-            <select class="form-select" id="profile-role-select" style="flex: 1; padding: var(--space-2); font-size: var(--text-sm);">
-              <option value="Executive Council">Executive Council</option>
-              <option value="District Council">District Council</option>
-              <option value="President">President</option>
-              <option value="Secretary">Secretary</option>
-              <option value="Club Member">Club Member</option>
-            </select>
-            <button class="btn btn-primary" id="btn-update-role" onclick="player.updateUserRole()" style="padding: 0 var(--space-4); font-size: var(--text-sm);">Save</button>
-          </div>
-        </div>
+
 
         <div style="margin-top: var(--space-6); display: flex; gap: var(--space-4); width: 100%;">
           <button class="btn btn-danger" id="btn-logout" style="width: 100%;">

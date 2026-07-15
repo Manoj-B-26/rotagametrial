@@ -523,6 +523,7 @@
   border: 2px solid var(--border-subtle);
   overflow: hidden;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .avatar img {
