@@ -1,6 +1,7 @@
 # netlify.toml configuration file for RotaGame
 
 [build]
+  command = "node inject-env.js"
   publish = "."
 
 # Static routing rules for SPA
