@@ -300,6 +300,7 @@
           <div class="toggle-group" id="leaderboard-type-toggle">
             <button class="toggle-option active" data-type="players">Players</button>
             <button class="toggle-option" data-type="clubs">Clubs</button>
+            <button class="toggle-option" data-type="zones">Zones</button>
             <button class="toggle-option" data-type="games">By Game</button>
           </div>
         </div>
@@ -427,6 +428,15 @@
         <div class="form-group">
           <label class="form-label" for="admin-club-short">Short Name</label>
           <input type="text" class="form-input" id="admin-club-short" placeholder="e.g. Bangalore East" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-club-zone">Zone Name</label>
+          <select class="form-input" id="admin-club-zone" required style="background: var(--bg-secondary); color: var(--text-primary); width: 100%;">
+            <option value="Zone Mirage">Zone Mirage</option>
+            <option value="Zone Rafale">Zone Rafale</option>
+            <option value="Zone Sukhoi">Zone Sukhoi</option>
+            <option value="Zone Tejas">Zone Tejas</option>
+          </select>
         </div>
 
         <div class="modal-footer">

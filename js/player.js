@@ -3,7 +3,7 @@
    ============================================ */
 
 class PlayerManager {
-  constructor() {}
+  constructor() { }
 
   async renderProfile() {
     const profile = auth.userProfile;
@@ -65,7 +65,7 @@ class PlayerManager {
       historyBody.innerHTML = '';
       matches.slice(0, 10).forEach(match => {
         const row = document.createElement('tr');
-        
+
         // Format Date
         let dateStr = "Recent";
         if (match.timestamp) {
@@ -81,8 +81,8 @@ class PlayerManager {
         }
 
         // Mode badge style
-        const modeBadge = match.mode === 'multiplayer' 
-          ? '<span class="badge badge-success">Multiplayer</span>' 
+        const modeBadge = match.mode === 'multiplayer'
+          ? '<span class="badge badge-success">Multiplayer</span>'
           : '<span class="badge badge-info">Solo</span>';
 
         row.innerHTML = `

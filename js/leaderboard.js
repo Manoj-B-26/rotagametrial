@@ -113,7 +113,7 @@ class LeaderboardManager {
         tableHeaders.innerHTML = `
           <th>Rank</th>
           <th>Club</th>
-          <th>City</th>
+          <th>Zone</th>
           <th>Aggregate Points</th>
         `;
 
@@ -129,6 +129,44 @@ class LeaderboardManager {
 
             clubs.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
             this.renderLeaderboard(clubs, 'clubs');
+          });
+
+      } else if (this.currentFilterType === 'zones') {
+        tableHeaders.innerHTML = `
+          <th>Rank</th>
+          <th>Zone</th>
+          <th>Participating Clubs</th>
+          <th>Aggregate Points</th>
+        `;
+
+        this.dataSnapshotListener = fbDb.collection('clubs')
+          .onSnapshot((snapshot) => {
+            let zonesMap = {
+              'Zone Mirage': { name: 'Zone Mirage', totalPoints: 0, clubCount: 0 },
+              'Zone Rafale': { name: 'Zone Rafale', totalPoints: 0, clubCount: 0 },
+              'Zone Sukhoi': { name: 'Zone Sukhoi', totalPoints: 0, clubCount: 0 },
+              'Zone Tejas': { name: 'Zone Tejas', totalPoints: 0, clubCount: 0 }
+            };
+
+            snapshot.forEach(doc => {
+              const c = doc.data();
+              const zoneName = c.zone;
+              if (zoneName) {
+                if (!zonesMap[zoneName]) {
+                  zonesMap[zoneName] = { name: zoneName, totalPoints: 0, clubCount: 0 };
+                }
+                zonesMap[zoneName].totalPoints += (c.totalPoints || 0);
+                zonesMap[zoneName].clubCount += 1;
+              }
+            });
+
+            let zones = Object.values(zonesMap).filter(z => z.totalPoints > 0);
+            if (zones.length === 0) {
+              zones = Object.values(zonesMap);
+            }
+
+            zones.sort((a, b) => b.totalPoints - a.totalPoints);
+            this.renderLeaderboard(zones, 'zones');
           });
 
       } else if (this.currentFilterType === 'games') {
@@ -210,7 +248,11 @@ class LeaderboardManager {
         scoreVal = `${item.totalPoints} pts`;
       } else if (type === 'clubs') {
         name = (item.name || "Unknown").replace("Rotaract Club of ", "RC ");
-        subtitle = item.city || "Unknown City";
+        subtitle = item.zone || "Unknown Zone";
+        scoreVal = `${item.totalPoints} pts`;
+      } else if (type === 'zones') {
+        name = item.name;
+        subtitle = `${item.clubCount} Clubs`;
         scoreVal = `${item.totalPoints} pts`;
       } else {
         name = item.playerName;
@@ -218,7 +260,10 @@ class LeaderboardManager {
         scoreVal = `${item.score} pts`;
       }
 
-      const initial = name.charAt(0).toUpperCase();
+      let initial = name.charAt(0).toUpperCase();
+      if (type === 'zones' && name.startsWith("Zone ")) {
+        initial = name.replace("Zone ", "").charAt(0).toUpperCase();
+      }
 
       podiumCard.innerHTML = `
         <div class="rank-badge rank-${rank}">${rank}</div>
@@ -265,7 +310,14 @@ class LeaderboardManager {
         row.innerHTML = `
           <td>${rankDisplay}</td>
           <td><strong>${item.name}</strong></td>
-          <td>${item.city}</td>
+          <td>${item.zone || 'None'}</td>
+          <td class="leaderboard-score-cell">${item.totalPoints || 0} pts</td>
+        `;
+      } else if (type === 'zones') {
+        row.innerHTML = `
+          <td>${rankDisplay}</td>
+          <td><strong>${item.name}</strong></td>
+          <td>${item.clubCount} Clubs</td>
           <td class="leaderboard-score-cell">${item.totalPoints || 0} pts</td>
         `;
       } else if (type === 'games') {

@@ -152,6 +152,7 @@ class AdminManager {
               <tr>
                 <th>Club Name</th>
                 <th>Short Name</th>
+                <th>Zone</th>
                 <th>Members</th>
                 <th style="text-align: right;">Actions</th>
               </tr>
@@ -161,6 +162,7 @@ class AdminManager {
                 <tr>
                   <td><strong>${c.name}</strong></td>
                   <td>${c.shortName}</td>
+                  <td>${c.zone || 'None'}</td>
                   <td>${c.memberCount || 0}</td>
                   <td class="admin-table-actions">
                     <button class="btn btn-secondary btn-sm" onclick="admin.openClubModal('${c.id}')"><i data-lucide="edit" style="width:14px;height:14px;"></i></button>
@@ -190,6 +192,7 @@ class AdminManager {
     document.getElementById('admin-club-id').value = id;
     document.getElementById('admin-club-name').value = '';
     document.getElementById('admin-club-short').value = '';
+    document.getElementById('admin-club-zone').value = 'Zone Mirage';
 
     if (id) {
       title.textContent = "Edit Club";
@@ -197,6 +200,7 @@ class AdminManager {
       if (club) {
         document.getElementById('admin-club-name').value = club.name;
         document.getElementById('admin-club-short').value = club.shortName;
+        document.getElementById('admin-club-zone').value = club.zone || 'Zone Mirage';
       }
     } else {
       title.textContent = "Add New Club";
@@ -213,13 +217,15 @@ class AdminManager {
     const id = document.getElementById('admin-club-id').value;
     const name = document.getElementById('admin-club-name').value.trim();
     const shortName = document.getElementById('admin-club-short').value.trim();
+    const zone = document.getElementById('admin-club-zone').value;
 
     try {
       if (id) {
         // Edit update
         await fbDb.collection('clubs').doc(id).update({
           name,
-          shortName
+          shortName,
+          zone
         });
         app.showToast("Updated", "Club details saved.", "success");
       } else {
@@ -227,6 +233,7 @@ class AdminManager {
         await fbDb.collection('clubs').add({
           name,
           shortName,
+          zone,
           memberCount: 0,
           totalPoints: 0,
           createdAt: isFirebaseMocked ? Date.now() : firebase.firestore.FieldValue.serverTimestamp()
